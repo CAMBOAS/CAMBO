@@ -549,18 +549,30 @@
       .lr-tbl tbody td:nth-child(14),
       .lr-tbl tbody td:nth-child(15) { display:none }
       /* Let table size to content so scroll works */
-      .lr-tbl { min-width:0; width:auto }
+      .lr-tbl { min-width:0; width:100% }
 
       /* Hide cards (not used in swipe mode) */
       .lr-mob-cards { display:none !important }
 
       /* ── Larger delete tap target ── */
-      .lr-del-btn { width:44px; height:44px; border-radius:10px; background:rgba(239,68,68,.08) }
+      .lr-del-btn { width:44px; height:44px; border-radius:10px; background:none }
 
       /* ── Compact toolbar ── */
       .lr-toolbar-left .lr-btn-add { display:none }
       .lr-srch { max-width:100%; font-size:14px }
-      .lr-table-card { padding:12px 10px 0 }
+
+      /* ── Full-width flush table card: no radius, no side borders ── */
+      .lr-table-card {
+        border-radius:0 !important;
+        border-left:none !important;
+        border-right:none !important;
+        margin-left:-12px !important;
+        margin-right:-12px !important;
+        padding:0 !important;
+      }
+      .lr-table-toolbar { padding:10px 12px 0 !important }
+      .lr-tbl-footer { padding:8px 12px 14px !important }
+
       .lr-wrap { padding-bottom:80px }
     }
   </style>
@@ -2297,7 +2309,7 @@ loadData();
     </div>
     <div class="lr-confirm-title">បញ្ជាក់ការលុប</div>
     <div class="lr-confirm-name" id="lrConfirmName"></div>
-    <div class="lr-confirm-sub">អ្នកកំពុងលុបទិន្នន័យអ្នកខ្ចីនេះ។<br>សកម្មភាពនេះនឹងផ្ញើទៅ Trash — អ្នកអាច Recover បានពីក្នុង Trash។</div>
+    <div class="lr-confirm-sub">តើអ្នកប្រាកដថាចង់លុបទិន្នន័យនេះ?</div>
     <div class="lr-confirm-btns">
       <button class="lr-confirm-cancel" onclick="closeConfirm()">មិនលុបទេ</button>
       <button class="lr-confirm-delete" id="lrConfirmDelBtn" onclick="confirmDelete()">
