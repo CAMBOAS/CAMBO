@@ -53,10 +53,10 @@
     return `
       <div class="sb-head">
         <div class="sb-logo-wrap">
-          <img class="sb-logo-img" src="${base}images/logo/LOGO.png" alt="HELEN LOAN" onerror="this.style.display='none'">
+          <img class="sb-logo-img" src="${base}images/logo/LOGO.png" alt="CAMBO" onerror="this.style.display='none'">
         </div>
         <div class="sb-brand-text">
-          <div class="sb-brand-name">HELEN LOAN</div>
+          <div class="sb-brand-name">CAMBO</div>
           <div class="sb-brand-sub">Loan Management</div>
         </div>
         <button class="sb-collapse-btn" id="sbToggleBtn" title="Toggle sidebar">
