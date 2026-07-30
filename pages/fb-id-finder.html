@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <script>(function(){document.documentElement.style.visibility='';})();</script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <title>Facebook ID Finder - HELEN LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
+  <link rel="stylesheet" href="../assets/css/main.css?v=5">
+  <style>
+    .orb { display: none !important; }
+    .background { background: #000000 !important; }
+    .background::before { display: none !important; }
+    body { background: #000000 !important; }
+    .sidebar { background: #27272a !important; }
+    [data-theme="light"] .background { background: #f8fafc !important; }
+    [data-theme="light"] body { background: #f8fafc !important; }
+    [data-theme="light"] .sidebar { background: #f8fafc !important; }
+    html[data-theme="light"] .header-shell,
+    html[data-theme="light"] .shared-topbar { background: #ffffff !important; border-bottom-color: rgba(0,0,0,.09) !important; }
+    .sb-logo-wrap { background: transparent !important; border-color: transparent !important; box-shadow: none !important; }
+    .sb-logo-wrap:hover { box-shadow: none !important; transform: none !important; }
+    .sb-user-card { border-color: transparent !important; background: transparent !important; }
+    .sb-user-avatar { box-shadow: none !important; }
+    .sidebar.sb-collapsed .sb-user-avatar { box-shadow: none !important; }
+    .main-content { padding: 0 !important; }
+    @media (max-width: 980px) { .main-content { padding-top: 64px !important; } }
+
+    /* ── Page Layout ── */
+    .fb-outer { display: flex; gap: 20px; padding: 24px 24px 40px; align-items: flex-start; }
+    .fb-left  { width: 260px; flex-shrink: 0; position: sticky; top: 16px; }
+    .fb-right { flex: 1; min-width: 0; }
+    .fb-wrap  { /* right column content container */ }
+
+    /* ── Website Links Panel (Area 1) ── */
+    .fb-sites-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .fb-sites-hd   { padding: 13px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .fb-sites-title { font-size: 12px; font-weight: 800; color: var(--text); flex: 1; display: flex; align-items: center; gap: 7px; }
+    .fb-sites-refresh { background: none; border: none; color: var(--muted); cursor: pointer; padding: 3px 5px; border-radius: 6px; display: flex; align-items: center; flex-shrink: 0; }
+    .fb-sites-refresh:hover { color: var(--text); background: rgba(148,163,184,.1); }
+    .fb-sites-body { padding: 8px; max-height: 480px; overflow-y: auto; }
+    .fb-sites-list { display: flex; flex-direction: column; gap: 2px; }
+    .fb-site-item  { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 10px; cursor: pointer; transition: background .15s, border-color .15s; border: 1px solid transparent; }
+    .fb-site-item:hover  { background: rgba(24,119,242,.07); border-color: rgba(24,119,242,.15); }
+    .fb-site-item.active { background: rgba(24,119,242,.1);  border-color: rgba(24,119,242,.28); }
+    .fb-site-icon { font-size: 14px; flex-shrink: 0; }
+    .fb-site-name { font-size: 12px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .fb-site-arr  { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+    .fb-sites-loading { padding: 28px 16px; text-align: center; font-size: 12px; color: var(--muted); }
+    .fb-sites-empty   { padding: 24px 14px; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.8; }
+
+    /* ── Iframe Panel (Area 2) ── */
+    .fb-iframe-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: none; }
+    .fb-iframe-card.show { display: block; }
+    .fb-iframe-hd   { padding: 11px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--card); }
+    .fb-iframe-title { font-size: 12px; font-weight: 700; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fb-iframe-open  { background: rgba(148,163,184,.1); border: 1px solid var(--border); border-radius: 7px; color: var(--muted); padding: 5px 10px; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .fb-iframe-open:hover { background: rgba(148,163,184,.18); color: var(--text); }
+    .fb-iframe-close { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px 7px; border-radius: 7px; font-size: 15px; line-height: 1; flex-shrink: 0; }
+    .fb-iframe-close:hover { background: rgba(239,68,68,.1); color: #ef4444; }
+    .fb-iframe-wrap  { position: relative; width: 100%; height: calc(100vh - 76px); min-height: 400px; }
+    .fb-iframe-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+    .fb-iframe-blocked { position: absolute; inset: 0; background: var(--card); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 32px; text-align: center; }
+    .fb-iframe-blocked-icon { font-size: 40px; }
+    .fb-iframe-blocked-msg  { font-size: 14px; color: var(--text); font-weight: 800; }
+    .fb-iframe-blocked-sub  { font-size: 12px; color: var(--muted); line-height: 1.8; }
+
+    /* ── Page Header ── */
+    .fb-page-hd { margin-bottom: 24px; }
+    .fb-page-title { font-size: 20px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 10px }
+    .fb-page-sub { font-size: 12px; color: var(--muted); margin-top: 4px }
+
+    /* ── Input Card ── */
+    .fb-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 16px }
+    .fb-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px }
+    .fb-input-row { display: flex; gap: 10px; align-items: stretch }
+    .fb-input { flex: 1; background: rgba(148,163,184,.07); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color .2s }
+    .fb-input:focus { border-color: #1877f2; box-shadow: 0 0 0 3px rgba(24,119,242,.12) }
+    [data-theme="light"] .fb-input { background: #f8fafc }
+    .fb-input::placeholder { color: var(--muted) }
+    .fb-btn { background: linear-gradient(135deg,#1877f2,#0a5cbf); color: #fff; border: none; border-radius: 10px; padding: 12px 22px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 8px; transition: opacity .15s }
+    .fb-btn:hover { opacity: .88 }
+    .fb-btn:disabled { opacity: .5; cursor: not-allowed }
+    .fb-hint { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.6 }
+    .fb-hint b { color: var(--text) }
+
+    /* ── Result Card ── */
+    .fb-result { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 16px }
+    .fb-result.show { display: block }
+    .fb-result-ok { border-color: rgba(34,197,94,.25) !important }
+    .fb-result-err { border-color: rgba(239,68,68,.2) !important }
+
+    .fb-res-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px }
+    .fb-res-label.ok { color: #22c55e }
+    .fb-res-label.err { color: #ef4444 }
+
+    .fb-id-box { display: flex; align-items: center; gap: 12px; background: rgba(24,119,242,.06); border: 1px solid rgba(24,119,242,.2); border-radius: 12px; padding: 16px 18px }
+    .fb-id-num { font-size: 24px; font-weight: 900; font-family: 'Courier New', monospace; color: #1877f2; letter-spacing: .04em; flex: 1; word-break: break-all }
+    [data-theme="light"] .fb-id-num { color: #0a5cbf }
+    .fb-copy-btn { background: rgba(24,119,242,.1); border: 1px solid rgba(24,119,242,.25); border-radius: 8px; color: #1877f2; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: .15s; font-family: inherit }
+    .fb-copy-btn:hover { background: rgba(24,119,242,.2) }
+    .fb-copy-btn.copied { background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.3); color: #22c55e }
+
+    .fb-method-tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; margin-top: 10px }
+    .fb-method-tag.direct { background: rgba(34,197,94,.1);  color: #22c55e; border: 1px solid rgba(34,197,94,.2) }
+    .fb-method-tag.mbasic { background: rgba(99,102,241,.1); color: #818cf8; border: 1px solid rgba(99,102,241,.2) }
+    .fb-method-tag.fetch  { background: rgba(245,158,11,.1); color: #f59e0b; border: 1px solid rgba(245,158,11,.2) }
+
+    .fb-err-box { display: flex; align-items: flex-start; gap: 12px; background: rgba(239,68,68,.05); border: 1px solid rgba(239,68,68,.15); border-radius: 12px; padding: 16px 18px }
+    .fb-err-icon { font-size: 20px; flex-shrink: 0 }
+    .fb-err-msg { font-size: 13px; color: var(--text); line-height: 1.6 }
+    .fb-err-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.6 }
+
+    /* ── Quick Links ── */
+    .fb-quick { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px }
+    .fb-quick-item { font-size: 11px; font-weight: 600; color: #1877f2; background: rgba(24,119,242,.07); border: 1px solid rgba(24,119,242,.15); border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: .15s }
+    .fb-quick-item:hover { background: rgba(24,119,242,.14) }
+
+    /* ── History ── */
+    .fb-hist-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px }
+    .fb-hist-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px }
+    .fb-hist-title { font-size: 12px; font-weight: 700; color: var(--text) }
+    .fb-hist-clear { font-size: 11px; color: var(--muted); cursor: pointer; background: none; border: none; font-family: inherit; padding: 0 }
+    .fb-hist-clear:hover { color: #ef4444 }
+    .fb-hist-empty { font-size: 12px; color: var(--muted); text-align: center; padding: 20px 0 }
+    .fb-hist-list { display: flex; flex-direction: column; gap: 6px }
+    .fb-hist-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(148,163,184,.05); border-radius: 10px; cursor: pointer; transition: .15s; border: 1px solid transparent }
+    .fb-hist-row:hover { background: rgba(24,119,242,.06); border-color: rgba(24,119,242,.15) }
+    .fb-hist-url { flex: 1; font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+    .fb-hist-id { font-size: 12px; font-weight: 800; color: #1877f2; font-family: monospace; flex-shrink: 0 }
+    .fb-hist-del { font-size: 14px; color: var(--muted); cursor: pointer; padding: 0 4px; flex-shrink: 0; background: none; border: none; line-height: 1 }
+    .fb-hist-del:hover { color: #ef4444 }
+
+    /* ── Config Card ── */
+    .fb-cfg-card { background: var(--card); border: 1px solid rgba(124,92,255,.25); border-radius: 16px; padding: 20px; margin-bottom: 16px }
+    .fb-cfg-hd { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none }
+    .fb-cfg-title { font-size: 12px; font-weight: 800; color: #a78bfa; display: flex; align-items: center; gap: 8px }
+    .fb-cfg-status { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px }
+    .fb-cfg-status.set { background: rgba(34,197,94,.1); color: #22c55e; border: 1px solid rgba(34,197,94,.2) }
+    .fb-cfg-status.unset { background: rgba(239,68,68,.08); color: #ef4444; border: 1px solid rgba(239,68,68,.2) }
+    .fb-cfg-arrow { color: var(--muted); font-size: 12px; transition: transform .2s }
+    .fb-cfg-arrow.open { transform: rotate(180deg) }
+    .fb-cfg-body { margin-top: 16px; display: none }
+    .fb-cfg-body.open { display: block }
+    .fb-cfg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px }
+    .fb-cfg-field label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; display: block; margin-bottom: 5px }
+    .fb-cfg-input { width: 100%; background: rgba(148,163,184,.07); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 12px; font-family: monospace; outline: none; box-sizing: border-box; transition: border-color .2s }
+    .fb-cfg-input:focus { border-color: #a78bfa; box-shadow: 0 0 0 3px rgba(124,92,255,.1) }
+    [data-theme="light"] .fb-cfg-input { background: #f8fafc }
+    .fb-cfg-save { background: linear-gradient(135deg,#7c5cff,#5b3ff0); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity .15s }
+    .fb-cfg-save:hover { opacity: .88 }
+    .fb-cfg-note { font-size: 11px; color: var(--muted); line-height: 1.7; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border) }
+    .fb-cfg-note a { color: #a78bfa }
+    @media (max-width: 600px) { .fb-cfg-row { grid-template-columns: 1fr } }
+
+    /* ── Loading spinner ── */
+    @keyframes spin { to { transform: rotate(360deg) } }
+    .fb-spin { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0 }
+
+    @media (max-width: 900px) {
+      .fb-outer { flex-direction: column; padding: 16px 14px 40px; gap: 12px; }
+      .fb-left  { width: 100%; position: static; }
+      .fb-sites-body { max-height: none; }
+      .fb-sites-list { display: grid; grid-template-columns: 1fr 1fr; }
+      .fb-iframe-wrap { height: calc(100vh - 160px); min-height: 420px; }
+      .fb-iframe-wrap iframe { width: 100%; min-width: 0; }
+    }
+    @media (max-width: 600px) {
+      .fb-outer { padding: 8px 8px 60px; gap: 8px; }
+      .fb-sites-list { grid-template-columns: 1fr 1fr; }
+      .fb-input-row { flex-direction: column }
+      .fb-btn { width: 100%; justify-content: center }
+      .fb-id-num { font-size: 18px }
+      .fb-iframe-wrap { height: calc(100vh - 120px); min-height: 380px; }
+      .fb-iframe-card {
+        margin-left: -8px;
+        margin-right: -8px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+      }
+      .fb-iframe-hd { padding: 10px 12px; }
+      .fb-iframe-title { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+<div class="background"></div>
+<div class="sidebar-overlay"></div>
+<div class="dashboard">
+  <aside class="sidebar" id="sharedSidebar"></aside>
+  <div class="main-content">
+    <header class="shared-topbar header-shell" id="sharedHeader"></header>
+    <div class="fb-outer">
+
+    <!-- Area 1: Website Links Panel (LEFT) -->
+    <div class="fb-left">
+      <div class="fb-sites-card" id="fbSitesCard">
+        <div class="fb-sites-hd">
+          <div class="fb-sites-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Website Links
+          </div>
+          <button class="fb-sites-refresh" onclick="loadSites()" title="ផ្ទុកឡើងវិញ">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+        <div class="fb-sites-body" id="fbSitesBody">
+          <div class="fb-sites-loading">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin .7s linear infinite;vertical-align:middle"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            <span style="margin-left:5px">កំពុងផ្ទុក...</span>
+          </div>
+        </div>
+      </div>
+    </div><!-- /fb-left -->
+
+    <!-- RIGHT: FB Finder content -->
+    <div class="fb-right">
+    <div class="fb-wrap" id="fbFinderContent">
+
+      <!-- Page Header -->
+      <div class="fb-page-hd">
+        <div class="fb-page-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          Facebook ID Finder
+        </div>
+        <div class="fb-page-sub">បំប្លែង Facebook URL ទៅជា Numeric User ID</div>
+      </div>
+
+      <!-- Config Card -->
+      <div class="fb-cfg-card" id="fbCfgCard">
+        <div class="fb-cfg-hd" onclick="toggleCfg()">
+          <div class="fb-cfg-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Facebook App Settings
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="fb-cfg-status unset" id="fbCfgStatus">មិនទាន់ Setup</span>
+            <span class="fb-cfg-arrow" id="fbCfgArrow">▼</span>
+          </div>
+        </div>
+        <div class="fb-cfg-body" id="fbCfgBody">
+          <div class="fb-cfg-row">
+            <div class="fb-cfg-field">
+              <label>App ID</label>
+              <input class="fb-cfg-input" id="cfgAppId" placeholder="1234567890" type="text">
+            </div>
+            <div class="fb-cfg-field">
+              <label>App Secret</label>
+              <input class="fb-cfg-input" id="cfgAppSecret" placeholder="abcdef1234567890abcdef" type="password">
+            </div>
+          </div>
+          <button class="fb-cfg-save" onclick="saveCfg()">💾 រក្សាទុក</button>
+          <div class="fb-cfg-note">
+            📌 <b>របៀប Get App ID + Secret:</b><br>
+            1. ចូល <a href="https://developers.facebook.com/apps" target="_blank">developers.facebook.com/apps</a> → Login<br>
+            2. <b>Create App</b> → ជ្រើស <b>"Other"</b> → <b>"Business"</b><br>
+            3. App Dashboard → <b>Settings → Basic</b> → Copy <b>App ID</b> + <b>App Secret</b><br>
+            4. Paste ខាងលើ → រក្សាទុក → ស្វែងរក ID ដោយ automatic ✅
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Card -->
+      <div class="fb-card">
+        <div class="fb-label">បញ្ចូល Facebook URL ឬ Username</div>
+        <div class="fb-input-row">
+          <input class="fb-input" id="fbInput"
+            placeholder="https://www.facebook.com/username  ឬ  facebook.com/profile.php?id=123456"
+            onkeydown="if(event.key==='Enter')doLookup()">
+          <button class="fb-btn" id="fbBtn" onclick="doLookup()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            ស្វែងរក ID
+          </button>
+        </div>
+        <div class="fb-hint">
+          <b>ឧទាហរណ៍ URL:</b>
+          <div class="fb-quick">
+            <span class="fb-quick-item" onclick="fillExample('https://www.facebook.com/profile.php?id=100012345678')">profile.php?id=100012345</span>
+            <span class="fb-quick-item" onclick="fillExample('https://www.facebook.com/zuck')">facebook.com/username</span>
+            <span class="fb-quick-item" onclick="fillExample('https://www.facebook.com/people/John-Doe/100012345678')">people/Name/ID</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="fb-result" id="fbResult"></div>
+
+      <!-- History -->
+      <div class="fb-hist-card" id="fbHistCard">
+        <div class="fb-hist-hd">
+          <div class="fb-hist-title">ប្រវត្តិ · Recent Lookups</div>
+          <button class="fb-hist-clear" onclick="clearHistory()">លុបទាំងអស់</button>
+        </div>
+        <div id="fbHistBody"><div class="fb-hist-empty">មិនទាន់មានប្រវត្តិ</div></div>
+      </div>
+
+    </div><!-- /fb-wrap -->
+
+      <!-- Area 2: Iframe Viewer -->
+      <div class="fb-iframe-card" id="fbIframeCard">
+        <div class="fb-iframe-hd">
+          <div class="fb-iframe-title" id="fbIframeTitle">Website</div>
+          <a class="fb-iframe-open" id="fbIframeOpen" href="#" target="_blank" rel="noopener">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            បើក Tab
+          </a>
+          <button class="fb-iframe-close" onclick="closeIframe()" title="បិទ">✕</button>
+        </div>
+        <div class="fb-iframe-wrap" id="fbIframeWrap">
+          <iframe id="fbIframe" allow="fullscreen" referrerpolicy="no-referrer"></iframe>
+          <div class="fb-iframe-blocked" id="fbIframeBlocked" style="display:none">
+            <div class="fb-iframe-blocked-icon">🚫</div>
+            <div class="fb-iframe-blocked-msg">Website នេះ មិនអនុញ្ញាត Embed</div>
+            <div class="fb-iframe-blocked-sub">
+              Website នេះប្រើ <code style="background:rgba(148,163,184,.15);padding:1px 6px;border-radius:4px;font-size:11px">X-Frame-Options</code><br>
+              ហើយបានរារាំងការ embed ក្នុង iframe
+            </div>
+            <a id="fbIframeBlockedLink" href="#" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:6px;background:#1877f2;color:#fff;border-radius:9px;padding:10px 20px;font-size:12px;font-weight:700;text-decoration:none;margin-top:8px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              បើក Website ក្នុង Tab ថ្មី
+            </a>
+          </div>
+        </div>
+      </div><!-- /fb-iframe-card -->
+
+    </div><!-- /fb-right -->
+    </div><!-- /fb-outer -->
+  </div>
+</div>
+<script src="../assets/js/layout.js"></script>
+<script>
+/* ── Config ── */
+var CFG_KEY = 'helen_fb_cfg';
+function loadCfg() { try { return JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); } catch(e){ return {}; } }
+function saveCfg() {
+  var appId = document.getElementById('cfgAppId').value.trim();
+  var appSecret = document.getElementById('cfgAppSecret').value.trim();
+  if (!appId || !appSecret) { alert('សូមបញ្ចូល App ID និង App Secret'); return; }
+  localStorage.setItem(CFG_KEY, JSON.stringify({ appId: appId, appSecret: appSecret }));
+  updateCfgStatus();
+  toggleCfg();
+  var btn = document.querySelector('.fb-cfg-save');
+  btn.textContent = '✓ រក្សាទុករួច!';
+  setTimeout(function(){ btn.textContent = '💾 រក្សាទុក'; }, 2000);
+}
+function updateCfgStatus() {
+  var cfg = loadCfg();
+  var statusEl = document.getElementById('fbCfgStatus');
+  if (cfg.appId && cfg.appSecret) {
+    statusEl.textContent = '✓ Setup រួច';
+    statusEl.className = 'fb-cfg-status set';
+    document.getElementById('cfgAppId').value = cfg.appId;
+    document.getElementById('cfgAppSecret').value = cfg.appSecret;
+  } else {
+    statusEl.textContent = 'មិនទាន់ Setup';
+    statusEl.className = 'fb-cfg-status unset';
+  }
+}
+function toggleCfg() {
+  var body  = document.getElementById('fbCfgBody');
+  var arrow = document.getElementById('fbCfgArrow');
+  var open  = body.classList.toggle('open');
+  arrow.classList.toggle('open', open);
+}
+
+/* ── Helpers ── */
+function getApiBase() {
+  if (location.protocol === 'file:') return null;
+  return location.origin;
+}
+
+function fillExample(url) {
+  document.getElementById('fbInput').value = url;
+  document.getElementById('fbInput').focus();
+}
+
+/* ── Client-side direct extraction (no server needed) ── */
+function extractDirectId(input) {
+  // profile.php?id=XXXXXXX  (with optional # fragment)
+  var m = input.match(/[?&]id=(\d{5,})/);
+  if (m) return m[1];
+  // /people/Name/XXXXXXX
+  m = input.match(/\/people\/[^/?#]+\/(\d{5,})/);
+  if (m) return m[1];
+  // facebook.com/XXXXXXX  (pure numeric)
+  m = input.match(/facebook\.com\/(\d{5,})([/?#]|$)/);
+  if (m) return m[1];
+  return null;
+}
+
+/* ── Lookup ── */
+async function doLookup() {
+  var input = document.getElementById('fbInput').value.trim();
+  if (!input) { showError('សូមបញ្ចូល Facebook URL ជាមុន'); return; }
+
+  // Step 1 — try client-side direct extraction (works offline / file://)
+  var directId = extractDirectId(input);
+  if (directId) {
+    showSuccess(directId, 'direct', input);
+    saveHistory(input, directId);
+    return;
+  }
+
+  // Step 2 — vanity URL needs server fetch
+  var base = getApiBase();
+  if (!base) {
+    showManualHelp(input);
+    return;
+  }
+
+  var cfg = loadCfg();
+  if (!cfg.appId || !cfg.appSecret) {
+    showNoCreds();
+    return;
+  }
+
+  setLoading(true);
+  try {
+    var apiUrl = base + '/api/fb-lookup?url=' + encodeURIComponent(input)
+      + '&app_id=' + encodeURIComponent(cfg.appId)
+      + '&app_secret=' + encodeURIComponent(cfg.appSecret);
+    var resp = await fetch(apiUrl);
+    var data = await resp.json();
+    if (data.ok && data.id) {
+      showSuccess(data.id, data.method, input, data.name || '');
+      saveHistory(input, data.id, data.name || '');
+    } else {
+      showError(data.message || 'មិនអាចទាញ ID បាន', data.hint);
+    }
+  } catch (err) {
+    showError('Server Error: ' + err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function setLoading(on) {
+  var btn = document.getElementById('fbBtn');
+  btn.disabled = on;
+  btn.innerHTML = on
+    ? '<div class="fb-spin"></div> កំពុងស្វែងរក...'
+    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> ស្វែងរក ID';
+}
+
+function showSuccess(id, method, inputUrl, name) {
+  var el = document.getElementById('fbResult');
+  var methodMap = { direct:'ទាញចេញពី URL ដោយផ្ទាល់', graph:'Facebook Graph API', mbasic:'mbasic.facebook.com', fetch:'Page HTML' };
+  var clsMap    = { direct:'direct', graph:'direct', mbasic:'mbasic', fetch:'fetch' };
+  var methodLabel = methodMap[method] || method;
+  var methodClass = clsMap[method] || 'fetch';
+  el.className = 'fb-result show fb-result-ok';
+  el.innerHTML =
+    '<div class="fb-res-label ok">✓ រកឃើញ Facebook ID</div>'
+    + (name ? '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">' + escHtml(name) + '</div>' : '')
+    + '<div class="fb-id-box">'
+    +   '<div class="fb-id-num" id="fbIdNum">' + id + '</div>'
+    +   '<button class="fb-copy-btn" id="fbCopyBtn" onclick="copyId(\'' + id + '\')">📋 Copy</button>'
+    + '</div>'
+    + '<span class="fb-method-tag ' + methodClass + '">' + methodLabel + '</span>'
+    + '<div style="margin-top:14px;font-size:11px;color:var(--muted)">'
+    +   'Profile URL: <a href="https://www.facebook.com/profile.php?id=' + id + '" target="_blank" style="color:#1877f2">facebook.com/profile.php?id=' + id + '</a>'
+    + '</div>';
+}
+
+function showNoCreds() {
+  var el = document.getElementById('fbResult');
+  el.className = 'fb-result show fb-result-err';
+  el.innerHTML =
+    '<div class="fb-res-label err">⚙ ត្រូវការ Facebook App Credentials</div>'
+    + '<div class="fb-err-box">'
+    +   '<div class="fb-err-icon">🔑</div>'
+    +   '<div>'
+    +     '<div class="fb-err-msg">សូម setup <b>App ID</b> + <b>App Secret</b> ជាមុន</div>'
+    +     '<div class="fb-err-hint" style="margin-top:8px">'
+    +       '<button onclick="toggleCfg();document.getElementById(\'fbCfgBody\').scrollIntoView({behavior:\'smooth\'})" '
+    +       'style="background:#a78bfa;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'
+    +       '⚙ បើក Settings ▲</button>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
+}
+
+function showError(msg, hint) {
+  var el = document.getElementById('fbResult');
+  var hintHtml = '';
+  if (hint === 'login_required' || hint === 'not_found' || hint === 'vanity') {
+    hintHtml = manualStepsHtml(document.getElementById('fbInput').value.trim());
+  }
+  el.className = 'fb-result show fb-result-err';
+  el.innerHTML =
+    '<div class="fb-res-label err">✗ មិនអាចទាញ ID ដោយស្វ័យប្រវត្តិ</div>'
+    + '<div class="fb-err-box">'
+    +   '<div class="fb-err-icon">⚠️</div>'
+    +   '<div>'
+    +     '<div class="fb-err-msg">' + msg + '</div>'
+    +   '</div>'
+    + '</div>'
+    + hintHtml;
+}
+
+function showManualHelp(input) {
+  var el = document.getElementById('fbResult');
+  el.className = 'fb-result show fb-result-err';
+  el.innerHTML =
+    '<div class="fb-res-label err">⚠ Vanity URL — ទាញ ID ដោយដៃ</div>'
+    + manualStepsHtml(input);
+}
+
+function manualStepsHtml(input) {
+  var profileUrl = (input || '').replace(/[<>"']/g, '');
+  var encoded = encodeURIComponent(profileUrl);
+  return '<div style="margin-top:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:18px 20px">'
+    /* title */
+    + '<div style="font-size:12px;font-weight:800;color:#f59e0b;margin-bottom:14px;display:flex;align-items:center;gap:8px">'
+    +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    +   'Vanity URL — Facebook ត្រូវការ Login ដើម្បីទាញ ID'
+    + '</div>'
+    /* quick button row */
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">'
+    +   '<a href="https://findmyfbid.in" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#1877f2;color:#fff;border-radius:9px;padding:9px 16px;font-size:12px;font-weight:700;text-decoration:none">'
+    +     '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>'
+    +     'findmyfbid.in (ដំណើរការ)'
+    +   '</a>'
+    +   '<button onclick="copyToClip(\'' + encoded + '\')" style="display:inline-flex;align-items:center;gap:6px;background:rgba(148,163,184,.1);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'
+    +     '📋 Copy URL'
+    +   '</button>'
+    + '</div>'
+    /* steps */
+    + '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">ឬ ធ្វើដោយដៃ:</div>'
+    + '<ol style="font-size:12px;color:var(--text);line-height:2.2;margin:0;padding-left:20px">'
+    + '<li>បើក <a href="' + escHtml(profileUrl) + '" target="_blank" style="color:#1877f2;font-weight:600">Profile URL</a> ក្នុង Chrome (ត្រូវ Login Facebook)</li>'
+    + '<li>ចុច <kbd style="background:rgba(148,163,184,.15);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px">Ctrl+U</kbd> (View Page Source)</li>'
+    + '<li>ចុច <kbd style="background:rgba(148,163,184,.15);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px">Ctrl+F</kbd> → search <code style="background:rgba(245,158,11,.15);color:#f59e0b;padding:1px 6px;border-radius:4px;font-size:11px">userID</code></li>'
+    + '<li>Copy លេខក្នុង <code style="background:rgba(148,163,184,.1);padding:1px 6px;border-radius:4px;font-size:11px">"userID":"<b style="color:#22c55e">1234567890</b>"</code></li>'
+    + '</ol>'
+    + '</div>';
+}
+
+function copyToClip(encoded) {
+  navigator.clipboard.writeText(decodeURIComponent(encoded));
+}
+
+function copyId(id) {
+  navigator.clipboard.writeText(id).then(function() {
+    var btn = document.getElementById('fbCopyBtn');
+    if (!btn) return;
+    btn.textContent = '✓ Copied!';
+    btn.className = 'fb-copy-btn copied';
+    setTimeout(function() {
+      btn.textContent = '📋 Copy';
+      btn.className = 'fb-copy-btn';
+    }, 2000);
+  });
+}
+
+/* ── History ── */
+var HIST_KEY = 'helen_fb_hist';
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function saveHistory(url, id, name) {
+  var hist = loadHistory().filter(function(h){ return h.id !== id; });
+  hist.unshift({ url: url, id: id, name: name||'', ts: Date.now() });
+  if (hist.length > 20) hist = hist.slice(0, 20);
+  localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  renderHistory();
+}
+
+function clearHistory() {
+  localStorage.removeItem(HIST_KEY);
+  renderHistory();
+}
+
+function deleteHistItem(id) {
+  var hist = loadHistory().filter(function(h){ return h.id !== id; });
+  localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  renderHistory();
+}
+
+function renderHistory() {
+  var hist = loadHistory();
+  var body = document.getElementById('fbHistBody');
+  if (!hist.length) {
+    body.innerHTML = '<div class="fb-hist-empty">មិនទាន់មានប្រវត្តិ</div>';
+    return;
+  }
+  body.innerHTML = '<div class="fb-hist-list">'
+    + hist.map(function(h) {
+        return '<div class="fb-hist-row" onclick="reuseHistory(\'' + escHtml(h.url) + '\')">'
+          + '<div class="fb-hist-url" title="' + escHtml(h.url) + '">' + escHtml(h.url) + '</div>'
+          + '<div class="fb-hist-id">' + h.id + '</div>'
+          + '<button class="fb-hist-del" onclick="event.stopPropagation();deleteHistItem(\'' + h.id + '\')" title="លុប">✕</button>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+}
+
+function reuseHistory(url) {
+  document.getElementById('fbInput').value = url;
+  doLookup();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+renderHistory();
+updateCfgStatus();
+
+/* ── Website Links Panel (Area 1) ── */
+var _sitesList    = [];
+var _activeSiteUrl = null;
+var HELEN_AS_URL  = 'https://script.google.com/macros/s/AKfycbzrKtkKz0ni5BCvZl2f-yWcMFw9-BPqfdp28Aom1nws-X9bOibOivHebPXh8WPMX0Ie/exec';
+
+function loadSites() {
+  var body = document.getElementById('fbSitesBody');
+  body.innerHTML = '<div class="fb-sites-loading">'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin .7s linear infinite;vertical-align:middle"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>'
+    + '<span style="margin-left:5px">កំពុងផ្ទុក...</span></div>';
+
+  var base = getApiBase();
+  var fetchUrl = base
+    ? base + '/api/proxy?action=helen_infor'
+    : HELEN_AS_URL + '?action=helen_infor';
+
+  fetch(fetchUrl)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var sites = (data && Array.isArray(data.websites)) ? data.websites : [];
+      _sitesList = sites;
+      renderSites(sites);
+    })
+    .catch(function() {
+      document.getElementById('fbSitesBody').innerHTML =
+        '<div class="fb-sites-empty" style="color:#ef4444">⚠ មិនអាចផ្ទុក Links<br><span style="color:var(--muted);font-size:10px">ពិនិត្យ Internet connection</span></div>';
+    });
+}
+
+function renderSites(sites) {
+  var body = document.getElementById('fbSitesBody');
+  if (!sites || !sites.length) {
+    body.innerHTML = '<div class="fb-sites-empty">គ្មាន Website Links<br>'
+      + '<span style="font-size:10px">បន្ថែម Links នៅ Google Sheet<br>HelenInfor · Columns D + E</span></div>';
+    return;
+  }
+  body.innerHTML = '<div class="fb-sites-list">'
+    + sites.map(function(s, i) {
+        return '<div class="fb-site-item" id="fbSite_' + i + '" onclick="openSite(' + i + ',this)">'
+          + '<div class="fb-site-icon">🌐</div>'
+          + '<div class="fb-site-name" title="' + escHtml(s.name) + '">' + escHtml(s.name) + '</div>'
+          + '<div class="fb-site-arr">›</div>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+}
+
+/* ── Iframe Viewer (Area 2) ── */
+async function openSite(idx, el) {
+  var site = _sitesList[idx];
+  if (!site) return;
+
+  document.querySelectorAll('.fb-site-item').forEach(function(item) { item.classList.remove('active'); });
+  if (el) el.classList.add('active');
+
+  var url  = site.url;
+  var name = site.name;
+  _activeSiteUrl = url;
+
+  var finder      = document.getElementById('fbFinderContent');
+  var card        = document.getElementById('fbIframeCard');
+  var frame       = document.getElementById('fbIframe');
+  var titleEl     = document.getElementById('fbIframeTitle');
+  var openLink    = document.getElementById('fbIframeOpen');
+  var blocked     = document.getElementById('fbIframeBlocked');
+  var blockedLink = document.getElementById('fbIframeBlockedLink');
+
+  titleEl.textContent   = name;
+  openLink.href         = url;
+  blockedLink.href      = url;
+  blocked.style.display = 'none';
+  frame.style.display   = 'block';
+  frame.src             = 'about:blank';
+
+  /* hide FB Finder, show iframe panel */
+  finder.style.display = 'none';
+  card.classList.add('show');
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  /* Server-side embeddability check (only when running via server) */
+  var base = getApiBase();
+  if (base) {
+    try {
+      var r    = await fetch(base + '/api/check-embed?url=' + encodeURIComponent(url));
+      var data = await r.json();
+      if (_activeSiteUrl !== url) return; /* user clicked elsewhere meanwhile */
+      if (data.ok && data.embeddable === false) {
+        frame.style.display   = 'none';
+        blocked.style.display = 'flex';
+        return;
+      }
+    } catch(e) { /* network error → try loading anyway */ }
+  }
+
+  /* Load the iframe */
+  if (_activeSiteUrl !== url) return;
+  frame.src = url;
+
+  var didLoad = false;
+  frame.onload = function() {
+    if (_activeSiteUrl !== url) return;
+    didLoad = true;
+    try {
+      var doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+      if (doc && doc.body !== null && doc.body.innerHTML.trim() === '') {
+        frame.style.display   = 'none';
+        blocked.style.display = 'flex';
+      }
+    } catch(e) { /* cross-origin loaded fine */ }
+  };
+  frame.onerror = function() {
+    if (_activeSiteUrl !== url) return;
+    frame.style.display   = 'none';
+    blocked.style.display = 'flex';
+  };
+  setTimeout(function() {
+    if (_activeSiteUrl !== url || didLoad) return;
+    frame.style.display   = 'none';
+    blocked.style.display = 'flex';
+  }, 12000);
+}
+
+function closeIframe() {
+  var finder = document.getElementById('fbFinderContent');
+  var card   = document.getElementById('fbIframeCard');
+  var frame  = document.getElementById('fbIframe');
+
+  /* restore FB Finder, hide iframe */
+  card.classList.remove('show');
+  frame.src = 'about:blank';
+  finder.style.display = '';
+  _activeSiteUrl = null;
+  document.querySelectorAll('.fb-site-item').forEach(function(item) { item.classList.remove('active'); });
+}
+
+loadSites();
+</script>
+</body>
+</html>
