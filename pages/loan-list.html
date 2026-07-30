@@ -470,18 +470,23 @@
     @media(max-width:620px){
       .lr-modal-bg { align-items:stretch !important; justify-content:stretch !important; padding:0 !important }
       .lr-add-modal { width:100vw !important; max-width:100vw !important; border-radius:0 !important; max-height:100dvh !important; min-height:100dvh !important; margin:0 !important }
-      .lr-modal-cols { grid-template-columns:1fr !important; gap:8px !important }
-      .lr-add-grid { grid-template-columns:1fr !important; gap:0 !important }
-      .lr-add-body { padding:10px 10px 0 !important }
-      .lr-add-hdr { padding:12px 12px 10px !important; border-radius:0 !important }
-      .lr-add-hdr-icon { width:32px !important; height:32px !important; margin-bottom:5px !important }
+      /* ── Stack the 2 panels vertically; keep 2 fields per row inside ── */
+      .lr-modal-cols { grid-template-columns:1fr !important; gap:0 !important }
+      .lr-add-grid { grid-template-columns:1fr 1fr !important; gap:0 8px !important }
+      .lr-add-body { padding:8px 8px 0 !important }
+      .lr-add-hdr { padding:10px 12px 8px !important; border-radius:0 !important }
+      .lr-add-hdr-icon { width:28px !important; height:28px !important; margin-bottom:4px !important }
       .lr-add-hdr-title { font-size:13px !important }
-      .lr-add-field { margin-bottom:9px !important }
-      .lr-add-input { padding:7px 10px !important; font-size:12px !important }
-      .lr-add-label { font-size:9px !important }
+      .lr-add-field { margin-bottom:8px !important }
+      .lr-add-input { padding:7px 8px !important; font-size:12px !important }
+      .lr-add-label { font-size:8.5px !important }
       .lr-sec-box { padding:0 !important; margin-bottom:0 !important; border-radius:0 !important; border:none !important; background:transparent !important }
       .lr-add-section { display:none !important }
       .lr-add-footer { padding:9px 10px 14px !important; border-radius:0 !important }
+      /* Full-width fields that shouldn't split: note textarea, FBID row, date */
+      .lr-add-field:has(textarea) { grid-column:1 / -1 }
+      .lr-add-date-row { grid-column:1 / -1 }
+      .lr-fbid-wrap { grid-column:1 / -1 }
     }
 
     /* Confirm Delete Modal */
