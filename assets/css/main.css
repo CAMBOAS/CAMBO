@@ -2408,6 +2408,61 @@ body.sb-collapsed .main-content {
   body.sb-collapsed .main-content { margin-left: 0 !important; width: 100% !important; }
   .sidebar.sb-collapsed { width: min(272px, 80vw) !important; }
   .sb-toggle-row { display: none !important; }
+
+  /* ── When sidebar opens on mobile: force full expanded view even if sb-collapsed ── */
+  body.sidebar-open .sidebar.sb-collapsed .sb-label,
+  body.sidebar-open .sidebar.sb-collapsed .sb-brand-text,
+  body.sidebar-open .sidebar.sb-collapsed .sb-section-label,
+  body.sidebar-open .sidebar.sb-collapsed .sb-divider,
+  body.sidebar-open .sidebar.sb-collapsed .sb-divider-sm,
+  body.sidebar-open .sidebar.sb-collapsed .sb-user-name { display: block !important; }
+
+  body.sidebar-open .sidebar.sb-collapsed .sb-user-role { display: flex !important; }
+  body.sidebar-open .sidebar.sb-collapsed .sb-active-dot { display: block !important; }
+
+  body.sidebar-open .sidebar.sb-collapsed .sb-link {
+    justify-content: flex-start !important;
+    padding: 10px 14px !important;
+    margin: 1px 8px !important;
+    gap: 10px !important;
+  }
+  body.sidebar-open .sidebar.sb-collapsed .sb-icon {
+    width: 18px !important; height: 18px !important;
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  body.sidebar-open .sidebar.sb-collapsed .sb-icon svg { width: 18px !important; height: 18px !important; }
+  body.sidebar-open .sidebar.sb-collapsed .sb-brand {
+    justify-content: flex-start !important;
+    padding: 16px 16px 10px !important;
+  }
+  body.sidebar-open .sidebar.sb-collapsed .sb-lang-btn {
+    justify-content: flex-start !important;
+    padding: 9px 12px !important;
+    height: auto !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(148,163,200,.12) !important;
+    background: rgba(255,255,255,.04) !important;
+    margin: 0 0 6px !important;
+  }
+  body.sidebar-open .sidebar.sb-collapsed .sb-lang-btn > span:not(.sb-theme-icon),
+  body.sidebar-open .sidebar.sb-collapsed .sb-lang-btn .sb-lang-badge { display: inline-flex !important; }
+  body.sidebar-open .sidebar.sb-collapsed .sb-lang-btn .sb-theme-icon {
+    width: 16px !important; height: 16px !important;
+    border: none !important; background: transparent !important; border-radius: 0 !important;
+  }
+  body.sidebar-open .sidebar.sb-collapsed .sb-theme-btn {
+    justify-content: flex-start !important;
+    padding: 9px 12px !important;
+    height: auto !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(148,163,200,.12) !important;
+    background: rgba(255,255,255,.04) !important;
+    margin-bottom: 8px !important;
+  }
+  body.sidebar-open .sidebar.sb-collapsed .sb-theme-btn > span:not(.sb-theme-icon),
+  body.sidebar-open .sidebar.sb-collapsed .sb-theme-btn .sb-theme-toggle { display: inline-flex !important; }
 }
 
 /* ════════════════════════════════════════════════

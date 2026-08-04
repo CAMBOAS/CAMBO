@@ -575,6 +575,40 @@
 
       .lr-wrap { padding-bottom:80px }
     }
+
+    /* ── Actions Dropdown ── */
+    .lr-act-wrap { position:relative; display:inline-flex }
+    .lr-act-menu { position:absolute; top:calc(100% + 6px); right:0; z-index:300; min-width:176px; background:var(--glass-bg,rgba(15,23,42,.95)); border:1px solid rgba(148,163,184,.18); border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,.4); backdrop-filter:blur(16px); padding:6px; display:none }
+    .lr-act-menu.open { display:block }
+    [data-theme="light"] .lr-act-menu { background:rgba(255,255,255,.98); border-color:rgba(148,163,184,.2); box-shadow:0 8px 28px rgba(0,0,0,.12) }
+    .lr-act-item { display:flex; align-items:center; gap:10px; width:100%; padding:9px 12px; border-radius:8px; border:none; background:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; text-align:left; font-family:inherit; transition:background .13s,color .13s }
+    .lr-act-item:hover { background:rgba(148,163,184,.1); color:var(--text) }
+    .lr-act-item.trash:hover { background:rgba(239,68,68,.1); color:#f87171 }
+    .lr-act-divider { height:1px; background:rgba(148,163,184,.1); margin:4px 0 }
+
+    /* ── Trash Modal ── */
+    .lr-trash-bg { position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(6px); z-index:1000; display:none; align-items:flex-start; justify-content:center }
+    .lr-trash-bg.open { display:flex }
+    .lr-trash-modal { background:var(--card); width:min(860px,100vw); height:100dvh; display:flex; flex-direction:column }
+    .lr-trash-hdr { display:flex; align-items:center; gap:10px; padding:14px 16px 12px; border-bottom:1px solid rgba(148,163,184,.1); background:linear-gradient(135deg,rgba(239,68,68,.1),rgba(148,163,184,.04)); flex-shrink:0 }
+    .lr-trash-hdr-icon { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#ef4444,#b91c1c); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(239,68,68,.3) }
+    .lr-trash-hdr-info { flex:1; min-width:0 }
+    .lr-trash-hdr-title { font-size:14px; font-weight:800; color:var(--text) }
+    .lr-trash-hdr-sub { font-size:10.5px; color:var(--muted); margin-top:1px }
+    .lr-trash-hdr-close { background:none; border:none; cursor:pointer; color:var(--muted); font-size:20px; padding:4px 8px; border-radius:8px; transition:.15s }
+    .lr-trash-hdr-close:hover { background:rgba(148,163,184,.1); color:var(--text) }
+    .lr-trash-body { flex:1; overflow-y:auto }
+    .lr-trash-empty { text-align:center; padding:60px 20px; color:var(--muted); font-size:13px }
+    .lr-trash-tbl { width:100%; border-collapse:collapse; font-size:13px }
+    .lr-trash-tbl thead th { position:sticky; top:0; z-index:2; background:var(--card); color:var(--muted); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:8px 10px; border-bottom:1px solid rgba(148,163,184,.12); text-align:left; white-space:nowrap }
+    .lr-trash-tbl tbody td { padding:9px 10px; border-bottom:1px solid rgba(148,163,184,.07); vertical-align:middle }
+    .lr-trash-tbl tbody tr:hover { background:rgba(148,163,184,.04) }
+    .lr-trash-recover-btn { background:rgba(16,185,129,.12); border:none; border-radius:8px; color:#10b981; font-size:11px; font-weight:700; padding:5px 9px; cursor:pointer; transition:.15s; white-space:nowrap }
+    .lr-trash-recover-btn:hover { background:rgba(16,185,129,.25) }
+    .lr-trash-pdel-btn { background:rgba(239,68,68,.1); border:none; border-radius:8px; color:#ef4444; font-size:11px; font-weight:700; padding:5px 9px; cursor:pointer; transition:.15s; white-space:nowrap }
+    .lr-trash-pdel-btn:hover { background:rgba(239,68,68,.22) }
+    .lr-trash-footer { padding:8px 14px; border-top:1px solid rgba(148,163,184,.1); font-size:11px; color:var(--muted); flex-shrink:0 }
+    .lr-ta-confirm-btn { flex:1; padding:10px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; transition:.18s; color:#fff }
   </style>
 </head>
 <body>
@@ -642,10 +676,6 @@
                     <label class="lr-fpanel-label" style="--sect-c:#a78bfa">ស្ថានភាព · Status</label>
                     <select class="lr-fpanel-select" id="lrFStatus" onchange="setFPChip('status',this.value)">
                       <option value="">— All Statuses —</option>
-                      <option value="Good">Good</option>
-                      <option value="Normal">Normal</option>
-                      <option value="BlackListed">BlackListed</option>
-                      <option value="High Risk">High Risk</option>
                     </select>
                   </div>
                   <div class="lr-fpanel-row">
@@ -666,11 +696,29 @@
                 </div>
               </div>
             </div>
-            <div class="lr-actions-wrap" id="lrActionsWrap">
-              <button class="lr-btn lr-btn-actions" onclick="openExportModal()" title="Export Report" style="padding:8px 10px">
+            <div class="lr-act-wrap" id="lrActWrap">
+              <button class="lr-btn lr-btn-actions" onclick="toggleActMenu()" title="Actions" style="padding:8px 10px">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
               </button>
+              <div class="lr-act-menu" id="lrActMenu">
+                <button class="lr-act-item trash" onclick="closeActMenu();toggleTrashMode()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  Trash
+                </button>
+                <div class="lr-act-divider"></div>
+                <button class="lr-act-item" onclick="closeActMenu();openExportModal()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export Report
+                </button>
+              </div>
             </div>
+          </div>
+
+          <!-- Trash Mode Banner -->
+          <div id="lrTrashBanner" style="display:none;align-items:center;gap:10px;padding:7px 14px;background:rgba(239,68,68,.09);border-bottom:1px solid rgba(239,68,68,.18)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            <span style="color:#f87171;font-size:12px;font-weight:700;flex:1">HelenLoanT — Trash View</span>
+            <button onclick="toggleTrashMode()" style="background:none;border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#f87171;font-size:11px;font-weight:700;padding:4px 10px;cursor:pointer">← ត្រឡប់</button>
           </div>
 
           <div class="lr-tbl-wrap">
@@ -945,10 +993,34 @@ async function loadData() {
 
 /* ── Populate filter dropdowns ── */
 function populateFilters() {
-  var groups = [...new Set(_allLoans.map(function(l){ return l.Groups||''; }).filter(Boolean))].sort();
-  var sel = document.getElementById('lrFGroup');
-  sel.innerHTML = '<option value="">All Groups</option>' +
-    groups.map(function(g){ return '<option value="'+esc(g)+'">'+esc(g)+'</option>'; }).join('');
+  /* Groups — display from HelenInfor, but option VALUES use actual loan data strings
+     (guarantees exact match in applyFilter since both come from same source)        */
+  var loanGroupsArr = [...new Set(_allLoans.map(function(l){ return (l.Groups||'').trim(); }).filter(Boolean))].sort();
+  var loanGroupMap  = {};
+  loanGroupsArr.forEach(function(g){ loanGroupMap[g.toLowerCase()] = g; });
+
+  var helenGroups = _helenInfor.groups.length ? _helenInfor.groups : loanGroupsArr;
+
+  var selG = document.getElementById('lrFGroup');
+  var prevGroup = selG.value;
+  selG.innerHTML = '<option value="">All Groups</option>' +
+    helenGroups.map(function(g) {
+      var gTrim  = g.trim();
+      var optVal = loanGroupMap[gTrim.toLowerCase()] || gTrim;
+      return '<option value="'+esc(optVal)+'">'+esc(g)+'</option>';
+    }).join('');
+  selG.value = prevGroup;
+
+  /* Statuses — from HelenInfor sheet, fall back to unique values in loan data */
+  var statuses = _helenInfor.statuses.length
+    ? _helenInfor.statuses
+    : [...new Set(_allLoans.map(function(l){ return l.Status||''; }).filter(Boolean))].sort();
+  var selS = document.getElementById('lrFStatus');
+  var prevStatus = selS.value;
+  selS.innerHTML = '<option value="">— All Statuses —</option>' +
+    statuses.map(function(s){ return '<option value="'+esc(s)+'">'+esc(s)+'</option>'; }).join('');
+  selS.value = prevStatus;
+
   renderFPGroups();
 }
 
@@ -961,31 +1033,41 @@ function applyFilter() {
   var df = document.getElementById('lrDateFrom') ? document.getElementById('lrDateFrom').value : '';
   var dt = document.getElementById('lrDateTo')   ? document.getElementById('lrDateTo').value   : '';
 
-  _filtered = _allLoans.filter(function(l){
-    if (q && !(
-      (l.FullName||'').toLowerCase().includes(q) ||
-      (l.NationalID||'').toLowerCase().includes(q) ||
-      (l.Phone||'').replace(/\s/g,'').includes(q.replace(/\s/g,'')) ||
-      (l.FBName||'').toLowerCase().includes(q) ||
-      (l.ID||'').toLowerCase().includes(q) ||
-      (l.FBID||'').toLowerCase().includes(q)
-    )) return false;
-    if (fg && l.Groups !== fg) return false;
-    if (fs) {
-      var st = (l.Status||'').trim().toLowerCase();
-      if (fs.toLowerCase() !== st) return false;
-    }
-    if (fn) {
-      var gv = (l.Gender||'').trim().toLowerCase();
-      if (fn.toLowerCase() !== gv) return false;
-    }
-    if (df || dt) {
-      var d = String(l.DateTime||'').slice(0,10); /* YYYY-MM-DD */
-      if (df && d < df) return false;
-      if (dt && d > dt) return false;
-    }
-    return true;
-  });
+  if (_trashMode) {
+    _filtered = _trashLoans.filter(function(l){
+      if (!q) return true;
+      return (l.FullName||'').toLowerCase().includes(q)
+          || (l.NationalID||'').toLowerCase().includes(q)
+          || (l.Phone||'').replace(/\s/g,'').includes(q.replace(/\s/g,''))
+          || (l.Status||'').toLowerCase().includes(q);
+    });
+  } else {
+    _filtered = _allLoans.filter(function(l){
+      if (q && !(
+        (l.FullName||'').toLowerCase().includes(q) ||
+        (l.NationalID||'').toLowerCase().includes(q) ||
+        (l.Phone||'').replace(/\s/g,'').includes(q.replace(/\s/g,'')) ||
+        (l.FBName||'').toLowerCase().includes(q) ||
+        (l.ID||'').toLowerCase().includes(q) ||
+        (l.FBID||'').toLowerCase().includes(q)
+      )) return false;
+      if (fg && (l.Groups||'').trim() !== fg.trim()) return false;
+      if (fs) {
+        var st = (l.Status||'').trim().toLowerCase();
+        if (fs.toLowerCase() !== st) return false;
+      }
+      if (fn) {
+        var gv = (l.Gender||'').trim().toLowerCase();
+        if (fn.toLowerCase() !== gv) return false;
+      }
+      if (df || dt) {
+        var d = String(l.DateTime||'').slice(0,10);
+        if (df && d < df) return false;
+        if (dt && d > dt) return false;
+      }
+      return true;
+    });
+  }
 
   sortAndRender();
 }
@@ -1091,13 +1173,20 @@ function renderTable() {
       + (function(){ var u=String(l.URL||'').trim(); return u && /^https?:\/\//i.test(u) ? '<td style="text-align:center"><a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" style="color:#60a5fa;font-size:11px">🔗</a></td>' : '<td style="color:var(--muted);font-size:11px;text-align:center">—</td>'; })()
       + '<td style="font-family:monospace;font-size:10px;color:var(--muted);white-space:nowrap">'+esc(l.ID||'—')+'</td>'
       + (function(){ var fb=String(l.FBID||'').trim(); if(!fb) return '<td style="text-align:center;color:var(--muted);font-size:11px">—</td>'; var href=/^https?:\/\//i.test(fb)?fb:'https://'+fb; return '<td style="text-align:center"><a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" title="'+esc(fb)+'" style="color:#60a5fa;display:inline-flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></td>'; })()
-      + '<td style="text-align:center"><button class="lr-del-btn" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>'
+      + (_trashMode
+          ? '<td style="text-align:center;white-space:nowrap"><button class="lr-trash-recover-btn" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" title="Recover">↩</button> <button class="lr-trash-pdel-btn" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" title="លុបជាស្ថាពរ">✕</button></td>'
+          : '<td style="text-align:center"><button class="lr-del-btn" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>')
       + '</tr>';
   }).join('');
 
   document.getElementById('lrTbody').innerHTML = html;
-  document.getElementById('lrFootInfo').textContent = _filtered.length + ' / ' + _allLoans.length + ' borrowers';
-  document.getElementById('lrFootCount').textContent = arr.length + ' shown';
+  if (_trashMode) {
+    document.getElementById('lrFootInfo').textContent = _filtered.length + ' / ' + _trashLoans.length + ' trash items';
+    document.getElementById('lrFootCount').textContent = arr.length + ' shown';
+  } else {
+    document.getElementById('lrFootInfo').textContent = _filtered.length + ' / ' + _allLoans.length + ' borrowers';
+    document.getElementById('lrFootCount').textContent = arr.length + ' shown';
+  }
   renderCards(arr);
 
   /* ── Random row stagger animation ── */
@@ -1253,6 +1342,7 @@ function renderStatusDonut() {
   var total = _allLoans.length;
   var svg   = document.getElementById('lrStatusSvg');
   var lgnd  = document.getElementById('lrStatusLegend');
+  if (!svg) return;
 
   if (!total) {
     svg.innerHTML = '<circle cx="80" cy="80" r="55" fill="none" stroke="rgba(148,163,184,.2)" stroke-width="24"/><text x="80" y="86" text-anchor="middle" font-size="11" fill="#94a3b8">No data</text>';
@@ -1384,7 +1474,8 @@ function renderGroupBars() {
       + '</div>';
   }).join('');
 
-  document.getElementById('lrGroupBars').innerHTML = html || '<div class="lr-loading" style="padding:16px">—</div>';
+  var lrGB = document.getElementById('lrGroupBars');
+  if (lrGB) lrGB.innerHTML = html || '<div class="lr-loading" style="padding:16px">—</div>';
 }
 
 
@@ -1915,8 +2006,156 @@ function openAddModal() {
   setTimeout(function(){ var f=document.getElementById('af_FullName'); if(f) f.focus(); }, 80);
 }
 
+function isAddFormDirty() {
+  var ids = ['af_FullName','af_NationalID','af_DOB','af_Phone','af_Gender','af_Groups',
+             'af_Money','af_Status','af_FBName','af_URL','af_ID','af_Note'];
+  for (var i = 0; i < ids.length; i++) {
+    var el = document.getElementById(ids[i]);
+    if (!el) continue;
+    var v = el.value.trim();
+    if (v && v !== '0' && v !== '0.00') return true;
+  }
+  return false;
+}
 function closeAddModal() {
+  if (isAddFormDirty()) {
+    document.getElementById('lrUnsavedBg').classList.add('open');
+    return;
+  }
   document.getElementById('lrAddModalBg').classList.remove('open');
+}
+function closeUnsavedBg() {
+  document.getElementById('lrUnsavedBg').classList.remove('open');
+}
+function closeAddModalForce() {
+  document.getElementById('lrUnsavedBg').classList.remove('open');
+  document.getElementById('lrAddModalBg').classList.remove('open');
+}
+
+/* ── Trash Modal (HelenLoanT) ── */
+var _trashLoans = [];
+var _trashMode  = false;
+var _taAction   = null;
+
+function toggleActMenu() {
+  document.getElementById('lrActMenu').classList.toggle('open');
+}
+function closeActMenu() {
+  document.getElementById('lrActMenu').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('lrActWrap');
+  if (wrap && !wrap.contains(e.target)) closeActMenu();
+});
+
+async function toggleTrashMode() {
+  if (_trashMode) {
+    /* Exit trash mode */
+    _trashMode = false;
+    document.getElementById('lrTrashBanner').style.display = 'none';
+    applyFilter();
+    return;
+  }
+  /* Enter trash mode */
+  _trashMode = true;
+  document.getElementById('lrTrashBanner').style.display = 'flex';
+  document.getElementById('lrTbody').innerHTML = '<tr><td colspan="17" class="lr-loading">កំពុងផ្ទុក Trash...</td></tr>';
+  try {
+    var data = await Promise.race([
+      CamboAPI.get({ action: 'helen_loan_trash' }),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
+    ]);
+    _trashLoans = (data.ok && Array.isArray(data.loans)) ? data.loans : [];
+    _trashLoans.forEach(function(l,i){ l._idx = i+1; });
+    applyFilter();
+  } catch(e) {
+    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="17" class="lr-loading">❌ មិនអាចភ្ជាប់ Server</td></tr>';
+  }
+}
+
+function renderTrashTable(loans) {
+  var body   = document.getElementById('lrTrashBody');
+  var footer = document.getElementById('lrTrashFooter');
+  if (!loans || !loans.length) {
+    body.innerHTML = '<div class="lr-trash-empty">🗑️ Trash ទទេ — គ្មានទិន្នន័យ</div>';
+    footer.textContent = '0 items';
+    return;
+  }
+  footer.textContent = loans.length + ' item' + (loans.length > 1 ? 's' : '') + ' ក្នុង Trash';
+  body.innerHTML = '<table class="lr-trash-tbl"><thead><tr>'
+    + '<th>#</th><th>ឈ្មោះ</th><th>NID</th><th>DOB</th><th>ស្ថានភាព</th><th>ចំនួន ($)</th><th>Action</th>'
+    + '</tr></thead><tbody>'
+    + loans.map(function(l, i) {
+        return '<tr>'
+          + '<td style="color:var(--muted);font-size:11px">' + (i+1) + '</td>'
+          + '<td style="font-weight:700">' + esc(l.FullName||'—') + '</td>'
+          + '<td style="color:#7c92c8;font-size:12px">' + esc(l.NationalID||'—') + '</td>'
+          + '<td style="font-size:12px">' + esc(l.DOB||'—') + '</td>'
+          + '<td>' + statusTag(l.Status) + '</td>'
+          + '<td style="font-size:12px;color:#10b981">' + (l.Money ? '$'+l.Money : '—') + '</td>'
+          + '<td><div style="display:flex;gap:5px;flex-wrap:wrap">'
+            + '<button class="lr-trash-recover-btn" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" onclick="openTAConfirm(\'recover\',this.dataset.dt,this.dataset.name)">↩ Recover</button>'
+            + '<button class="lr-trash-pdel-btn" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" onclick="openTAConfirm(\'perm_delete\',this.dataset.dt,this.dataset.name)">✕ លុប</button>'
+          + '</div></td>'
+          + '</tr>';
+    }).join('')
+    + '</tbody></table>';
+}
+
+function openTAConfirm(type, key, name) {
+  _taAction = { type: type, key: key, name: name };
+  var isDel = type === 'perm_delete';
+  var box = document.getElementById('lrTAConfirmBox');
+  box.style.borderColor = isDel ? 'rgba(239,68,68,.25)' : 'rgba(16,185,129,.25)';
+  var icon = document.getElementById('lrTAConfirmIcon');
+  icon.style.background = isDel ? 'rgba(239,68,68,.12)' : 'rgba(16,185,129,.12)';
+  icon.innerHTML = isDel
+    ? '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>'
+    : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>';
+  document.getElementById('lrTAConfirmTitle').textContent = isDel ? 'លុបជាអចិន្ត្រៃយ៍?' : 'ស្ដារទិន្នន័យ?';
+  document.getElementById('lrTAConfirmName').textContent  = name;
+  document.getElementById('lrTAConfirmSub').textContent   = isDel
+    ? 'ទិន្នន័យនឹងត្រូវបានលុបចោលជាស្ថាពរ — មិនអាច Recover បានទៀតទេ'
+    : 'ទិន្នន័យនឹងត្រូវបានស្ដារទៅ HelenLoan';
+  var btn = document.getElementById('lrTAConfirmBtn');
+  btn.textContent = isDel ? 'លុបចោល' : 'Recover';
+  btn.style.background = isDel ? 'linear-gradient(135deg,#ef4444,#b91c1c)' : 'linear-gradient(135deg,#10b981,#059669)';
+  btn.disabled = false;
+  document.getElementById('lrTAConfirmBg').classList.add('open');
+}
+
+function closeTAConfirm() {
+  document.getElementById('lrTAConfirmBg').classList.remove('open');
+  _taAction = null;
+}
+
+async function executeTAAction() {
+  if (!_taAction) return;
+  var btn = document.getElementById('lrTAConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'កំពុង...';
+  var apiAction = _taAction.type === 'recover' ? 'helen_loan_recover' : 'helen_loan_perm_delete';
+  try {
+    var res = await CamboAPI.post({ action: apiAction, key: _taAction.key });
+    if (res && res.ok) {
+      var wasRecover = _taAction.type === 'recover';
+      toast(wasRecover ? '✅ ស្ដារបានជោគជ័យ' : '🗑️ លុបចោលជាស្ថាពរ');
+      var doneKey = _taAction.key;
+      closeTAConfirm();
+      _trashLoans = _trashLoans.filter(function(l){ return l.DateTime !== doneKey; });
+      _trashLoans.forEach(function(l,i){ l._idx = i+1; });
+      applyFilter();
+      if (wasRecover) loadData();
+    } else {
+      toast('❌ ' + ((res && res.message) || 'Failed'), true);
+      btn.disabled = false;
+      btn.textContent = _taAction.type === 'recover' ? 'Recover' : 'លុបចោល';
+    }
+  } catch(e) {
+    toast('❌ Network error', true);
+    btn.disabled = false;
+    btn.textContent = _taAction.type === 'recover' ? 'Recover' : 'លុបចោល';
+  }
 }
 
 /* ── Manage Groups & Statuses ── */
@@ -2222,6 +2461,17 @@ document.getElementById('lrTbody').addEventListener('click', function(e) {
     var dt = delEl.getAttribute('data-dt');
     var loan = _allLoans.find(function(x){ return x.DateTime === dt; });
     if (loan) openConfirm(loan);
+    return;
+  }
+  var recEl = e.target.closest('.lr-trash-recover-btn');
+  if (recEl) {
+    openTAConfirm('recover', recEl.getAttribute('data-dt'), recEl.getAttribute('data-name'));
+    return;
+  }
+  var pdelEl = e.target.closest('.lr-trash-pdel-btn');
+  if (pdelEl) {
+    openTAConfirm('perm_delete', pdelEl.getAttribute('data-dt'), pdelEl.getAttribute('data-name'));
+    return;
   }
 });
 
@@ -2316,6 +2566,55 @@ loadData();
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         លុបចោល
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Unsaved Changes Warning -->
+<div class="lr-confirm-bg" id="lrUnsavedBg">
+  <div class="lr-confirm-box" style="border-color:rgba(245,158,11,.35)">
+    <div class="lr-confirm-icon" style="background:rgba(245,158,11,.12)">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="lr-confirm-title">ចេញដោយមិនរក្សាទុក?</div>
+    <div class="lr-confirm-sub">ព័ត៌មានដែលបានបំពេញនឹងត្រូវបាត់បង់។</div>
+    <div class="lr-confirm-btns">
+      <button class="lr-confirm-cancel" onclick="closeUnsavedBg()">បន្តបំពេញ</button>
+      <button class="lr-confirm-delete" style="background:linear-gradient(135deg,#f59e0b,#ef4444);box-shadow:0 4px 16px rgba(245,158,11,.35)" onclick="closeAddModalForce()">ចេញ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Trash Modal -->
+<div class="lr-trash-bg" id="lrTrashBg">
+  <div class="lr-trash-modal">
+    <div class="lr-trash-hdr">
+      <div class="lr-trash-hdr-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </div>
+      <div class="lr-trash-hdr-info">
+        <div class="lr-trash-hdr-title">HelenLoanT — Trash</div>
+        <div class="lr-trash-hdr-sub">ទិន្នន័យដែលត្រូវបានលុប — Recover ឬ លុបជាស្ថាពរ</div>
+      </div>
+      <button class="lr-trash-hdr-close" onclick="closeTrashModal()">✕</button>
+    </div>
+    <div class="lr-trash-body" id="lrTrashBody">
+      <div class="lr-trash-empty">កំពុងផ្ទុក...</div>
+    </div>
+    <div class="lr-trash-footer" id="lrTrashFooter"></div>
+  </div>
+</div>
+
+<!-- Trash Action Confirm -->
+<div class="lr-confirm-bg" id="lrTAConfirmBg">
+  <div class="lr-confirm-box" id="lrTAConfirmBox">
+    <div class="lr-confirm-icon" id="lrTAConfirmIcon"></div>
+    <div class="lr-confirm-title" id="lrTAConfirmTitle"></div>
+    <div class="lr-confirm-name" id="lrTAConfirmName"></div>
+    <div class="lr-confirm-sub" id="lrTAConfirmSub"></div>
+    <div class="lr-confirm-btns">
+      <button class="lr-confirm-cancel" onclick="closeTAConfirm()">បោះបង់</button>
+      <button class="lr-ta-confirm-btn" id="lrTAConfirmBtn" onclick="executeTAAction()"></button>
     </div>
   </div>
 </div>
