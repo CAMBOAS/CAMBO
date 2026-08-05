@@ -14,25 +14,26 @@
 
   async function get(params) {
     const qs  = new URLSearchParams(params).toString();
-    /* Use /api/proxy when served from http/https (local server or Vercel) */
     const url = location.protocol !== 'file:'
       ? '/api/proxy?' + qs
       : APPS_SCRIPT_URL + '?' + qs + '&_=' + Date.now();
-    const res = await fetch(url, { redirect: 'follow' });
-    return res.json();
+    const res  = await fetch(url, { redirect: 'follow' });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return { ok: false, raw: text }; }
   }
 
   async function post(body) {
     const url = location.protocol !== 'file:'
       ? '/api/proxy'
       : APPS_SCRIPT_URL;
-    const res = await fetch(url, {
+    const res  = await fetch(url, {
       method:  'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body:    JSON.stringify(body),
       redirect: 'follow',
     });
-    return res.json();
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return { ok: true }; }
   }
 
   window.CamboAPI = { get, post, getBase, APPS_SCRIPT_URL };
