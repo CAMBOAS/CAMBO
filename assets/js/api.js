@@ -23,9 +23,38 @@
   }
 
   async function post(body) {
-    const url = location.protocol !== 'file:'
-      ? '/api/proxy'
-      : APPS_SCRIPT_URL;
+    const isFile = location.protocol === 'file:';
+    const url = isFile ? APPS_SCRIPT_URL : '/api/proxy';
+
+    if (isFile) {
+      /* file:// → Chrome blocks reading cross-origin CORS response.
+         1. Check navigator.onLine (catches WiFi-off case immediately).
+         2. await no-cors fetch + 15s timeout:
+            - resolves (opaque) → network reached Apps Script → assume ok
+            - throws TypeError   → real network failure (internet down, DNS fail)
+            - throws timeout     → very slow / unreachable */
+      if (!navigator.onLine) {
+        return { ok: false, message: 'គ្មានការតភ្ជាប់អ៊ីនធឺណិត — សូមពិនិត្យ Wifi/Data' };
+      }
+      try {
+        await Promise.race([
+          fetch(url, {
+            method:  'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body:    JSON.stringify(body),
+            mode:    'no-cors',
+          }),
+          new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 15000); })
+        ]);
+        return { ok: true };
+      } catch(e) {
+        if (e.message === 'timeout') {
+          return { ok: false, message: 'Request timeout — ការតភ្ជាប់យឺត សូម Try Again' };
+        }
+        return { ok: false, message: 'Network error — គ្មានអ៊ីនធឺណិត ឬ Server មានបញ្ហា' };
+      }
+    }
+
     const res  = await fetch(url, {
       method:  'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },

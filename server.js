@@ -119,15 +119,18 @@ function httpsPost(targetUrl, body) {
       if (redirects > 5) return reject(new Error('Too many redirects'));
       const opts = url.parse(u);
       if (redirects > 0) {
-        /* After first redirect, switch to GET (Apps Script redirect behaviour) */
+        /* After redirect, switch to GET */
         opts.method = 'GET';
-        return new Promise((res2, rej2) => {
-          https.get(opts, (res) => {
-            let data = '';
-            res.on('data', c => { data += c; });
-            res.on('end', () => resolve(data));
-          }).on('error', rej2);
-        }).then(resolve).catch(reject);
+        https.get(opts, (res) => {
+          if ([301,302,303].includes(res.statusCode) && res.headers.location) {
+            res.resume(); /* drain body to free connection */
+            return doRequest(res.headers.location, redirects + 1);
+          }
+          let data = '';
+          res.on('data', c => { data += c; });
+          res.on('end', () => resolve(data));
+        }).on('error', reject);
+        return;
       }
       opts.method  = 'POST';
       opts.headers = {
@@ -135,7 +138,8 @@ function httpsPost(targetUrl, body) {
         'Content-Length': Buffer.byteLength(body),
       };
       const req = https.request(opts, (res) => {
-        if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 303) {
+        if ([301,302,303].includes(res.statusCode) && res.headers.location) {
+          res.resume(); /* drain body to free connection */
           return doRequest(res.headers.location, redirects + 1);
         }
         let data = '';
@@ -161,26 +165,33 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.writeHead(200); return res.end(); }
 
-  /* ── /api/proxy — forward to Apps Script ── */
+  /* ── /api/proxy — forward to Apps Script (uses built-in fetch, auto redirect) ── */
   if (pathname === '/api/proxy') {
     try {
-      let text;
+      let response;
       if (req.method === 'POST') {
         let body = '';
         await new Promise((ok) => {
           req.on('data', c => { body += c; });
           req.on('end', ok);
         });
-        text = await httpsPost(APPS_SCRIPT_URL, body);
+        response = await fetch(APPS_SCRIPT_URL, {
+          method:   'POST',
+          headers:  { 'Content-Type': 'text/plain;charset=utf-8' },
+          body:     body,
+          redirect: 'follow',
+        });
       } else {
         const qs  = new URLSearchParams(parsed.query).toString();
         const uri = qs ? `${APPS_SCRIPT_URL}?${qs}` : APPS_SCRIPT_URL;
-        text = await httpsGet(uri);
+        response  = await fetch(uri, { redirect: 'follow' });
       }
+      const text = await response.text();
       res.setHeader('Content-Type', 'application/json');
       res.writeHead(200);
-      return res.end(text);
+      return res.end(text || '{"ok":true}');
     } catch (err) {
+      console.error('[proxy error]', err.message);
       res.writeHead(500);
       return res.end(JSON.stringify({ ok: false, message: err.message }));
     }

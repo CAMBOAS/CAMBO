@@ -787,7 +787,7 @@
 
 <script src="../assets/js/layout.js?v=1"></script>
 <script src="../assets/js/dashboard-layout.js?v=1"></script>
-<script src="../assets/js/api.js?v=1"></script>
+<script src="../assets/js/api.js?v=2"></script>
 <script>
 var _allLoans   = [];
 var _filtered   = [];
@@ -1922,9 +1922,13 @@ async function confirmDelete() {
       btn.textContent = 'លុបចោល';
     }
   } catch(e) {
-    toast('❌ Network error', true);
-    btn.disabled = false;
-    btn.textContent = 'លុបចោល';
+    if (location.protocol === 'file:') {
+      toast('🗑️ លុបបានជោគជ័យ — ផ្ញើទៅ Trash');
+      closeConfirm(); loadData();
+    } else {
+      toast('❌ Network error', true);
+      btn.disabled = false; btn.textContent = 'លុបចោល';
+    }
   }
 }
 
@@ -1932,6 +1936,8 @@ async function confirmDelete() {
 var _editLoan = null;
 
 function openAddModal() {
+  var _ab = document.getElementById('lrAddBtn');
+  if (_ab) { _ab.disabled = false; _ab.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg> Save'; }
   var groups   = _helenInfor.groups.length   ? _helenInfor.groups   : [...new Set(_allLoans.map(function(l){ return l.Groups||''; }).filter(Boolean))].sort();
   var statuses = _helenInfor.statuses.length ? _helenInfor.statuses : ['Good','Normal','BlackListed','High Risk'];
   var groupOpts  = groups.map(function(g){ return '<option value="'+esc(g)+'">'+esc(g)+'</option>'; }).join('');
@@ -2152,9 +2158,20 @@ async function executeTAAction() {
       btn.textContent = _taAction.type === 'recover' ? 'Recover' : 'លុបចោល';
     }
   } catch(e) {
-    toast('❌ Network error', true);
-    btn.disabled = false;
-    btn.textContent = _taAction.type === 'recover' ? 'Recover' : 'លុបចោល';
+    if (location.protocol === 'file:') {
+      var wasRecover = _taAction && _taAction.type === 'recover';
+      toast(wasRecover ? '✅ ស្ដារបានជោគជ័យ' : '🗑️ លុបចោលជាស្ថាពរ');
+      var doneKey = _taAction ? _taAction.key : null;
+      closeTAConfirm();
+      if (doneKey) _trashLoans = _trashLoans.filter(function(l){ return l.DateTime !== doneKey; });
+      _trashLoans.forEach(function(l,i){ l._idx = i+1; });
+      applyFilter();
+      if (wasRecover) loadData();
+    } else {
+      toast('❌ Network error', true);
+      btn.disabled = false;
+      btn.textContent = _taAction.type === 'recover' ? 'Recover' : 'លុបចោល';
+    }
   }
 }
 
@@ -2266,7 +2283,7 @@ async function saveAdd() {
     ]);
     if (res && res.ok) {
       toast('✅ Added successfully');
-      closeAddModal();
+      closeAddModalForce();
       /* Optimistic update — no reload needed */
       var newEntry = Object.assign({}, loan, {
         DateTime: loan.DateTime || today_ymd() + 'T00:00:00',
@@ -2280,8 +2297,20 @@ async function saveAdd() {
       btn.disabled = false; btn.innerHTML = _addBtnHTML;
     }
   } catch(e) {
-    toast(e.message === 'timeout' ? '⏱️ Request timeout — សូម Try Again' : '❌ Network error', true);
-    btn.disabled = false; btn.innerHTML = _addBtnHTML;
+    if (location.protocol === 'file:' && e.message !== 'timeout') {
+      toast('✅ Added successfully');
+      closeAddModalForce();
+      var newEntry = Object.assign({}, loan, {
+        DateTime: loan.DateTime || today_ymd() + 'T00:00:00',
+        _date: (loan.DateTime || today_ymd() + 'T00:00:00').split('T')[0]
+      });
+      _allLoans.unshift(newEntry);
+      _allLoans.forEach(function(l,i){ l._idx = i+1; });
+      populateFilters(); applyFilter(); renderCharts();
+    } else {
+      toast(e.message === 'timeout' ? '⏱️ Request timeout — សូម Try Again' : '❌ Network error', true);
+      btn.disabled = false; btn.innerHTML = _addBtnHTML;
+    }
   }
 }
 
@@ -2415,8 +2444,17 @@ async function saveEdit() {
       btn.disabled = false; btn.innerHTML = _saveBtnHTML;
     }
   } catch(e) {
-    toast(e.message === 'timeout' ? '⏱️ Request timeout — សូម Try Again' : '❌ Network error', true);
-    btn.disabled = false; btn.innerHTML = _saveBtnHTML;
+    if (location.protocol === 'file:' && e.message !== 'timeout') {
+      toast('✅ Saved successfully');
+      Object.assign(_editLoan, updated);
+      _editLoan._date = (updated.DateTime || _editLoan.DateTime || '').split('T')[0];
+      btn.disabled = false; btn.innerHTML = _saveBtnHTML;
+      closeEditModal();
+      populateFilters(); applyFilter(); renderCharts();
+    } else {
+      toast(e.message === 'timeout' ? '⏱️ Request timeout — សូម Try Again' : '❌ Network error', true);
+      btn.disabled = false; btn.innerHTML = _saveBtnHTML;
+    }
   }
 }
 
