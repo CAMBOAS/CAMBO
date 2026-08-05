@@ -83,10 +83,6 @@
       <div class="sb-grow"></div>
 
       <div class="sb-footer">
-        <button class="sb-ctrl-btn sb-link-danger" onclick="handleLogout()" title="${t('ចាកចេញ','Logout')}" style="width:100%;margin-bottom:6px;justify-content:flex-start">
-          <span class="sb-theme-icon">${ic.logout}</span>
-          <span class="sb-ctrl-label">${t('ចាកចេញ','Logout')}</span>
-        </button>
         <div class="sb-ctrl-row">
           <button class="sb-ctrl-btn sb-theme-btn" id="sbThemeBtn" title="Toggle Theme">
             <span class="sb-theme-icon">${ic.moon}</span>
@@ -98,7 +94,9 @@
           </button>
         </div>
         <div class="sb-user-card" id="sbUserRow">
-          <div class="sb-user-avatar" id="sbUserAvatar">HL</div>
+          <div class="sb-user-avatar sb-user-avatar-img" id="sbUserAvatar">
+            <img src="${base}images/logo/Helen-Loan.png" alt="Helen Loan" onerror="this.style.display='none';this.parentNode.textContent='HL'">
+          </div>
           <div class="sb-user-info">
             <div class="sb-user-name" id="sbUserName">HELEN LOAN</div>
             <div class="sb-user-role" id="sbUserRole">
@@ -114,6 +112,24 @@
     return `<button class="topbar-menu-btn" id="topbarMenuBtn" title="Menu">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>`;
+  }
+
+  function buildBottomNav() {
+    const cur  = getCurrentPage();
+    const base = getBase();
+    function bnItem(page, icon, label) {
+      const pageName = page.split('/').pop();
+      const active   = cur === pageName ? 'sb-bn-active' : '';
+      return `<a href="${base}${page}" class="sb-bn-item ${active}">
+        <span class="sb-bn-icon">${icon}</span>
+        <span class="sb-bn-label">${label}</span>
+      </a>`;
+    }
+    return `<nav class="sb-bottom-nav" id="sbBottomNav">
+      ${bnItem('index.html',              ic.dashboard, t('Dashboard','Dashboard'))}
+      ${bnItem('pages/loan-list.html',    ic.loanlist,  t('កម្ចី','Loans'))}
+      ${bnItem('pages/fb-id-finder.html', ic.facebook,  t('FB ID','FB ID'))}
+    </nav>`;
   }
 
   function handleLogout() {
@@ -182,22 +198,44 @@
     var header  = document.getElementById('sharedHeader');
     if (sidebar) {
       sidebar.innerHTML = buildSidebar();
-      /* Preserve collapsed state */
       if (localStorage.getItem('helen_sb_collapsed') === '1') {
         sidebar.classList.add('sb-collapsed');
         document.body.classList.add('sb-collapsed');
       }
     }
-    /* Build topbar BEFORE initSidebarToggle so #topbarMenuBtn exists in DOM */
     if (header) header.innerHTML = buildTopbar();
     if (sidebar) {
       initSidebarToggle(sidebar);
       initThemeBtn();
       initLangBtn();
     }
+    /* Inject bottom nav (mobile) */
+    var old = document.getElementById('sbBottomNav');
+    if (old) old.remove();
+    var tmp = document.createElement('div');
+    tmp.innerHTML = buildBottomNav();
+    document.body.appendChild(tmp.firstElementChild);
+  }
+
+  function applyLogoAnimation() {
+    var logo = document.querySelector('.sb-logo-img');
+    if (!logo) return;
+    var anims = [
+      'logo-spin          5s  linear      infinite',
+      'logo-spin          8s  linear      infinite',
+      'logo-spin-glow     6s  ease-in-out infinite',
+      'logo-spin-float    5s  ease-in-out infinite',
+      'logo-spin-pulse    4s  ease-in-out infinite',
+      'logo-spin-elastic  3s  ease-in-out infinite',
+      'logo-spin-reverse  7s  linear      infinite',
+      'logo-spin-disco    4s  linear      infinite',
+      'logo-spin-tilt     6s  ease-in-out infinite',
+    ];
+    logo.style.animation = anims[Math.floor(Math.random() * anims.length)];
   }
 
   document.addEventListener('DOMContentLoaded', function () {
     renderLayout();
+    applyLogoAnimation();
   });
 })();

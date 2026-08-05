@@ -2466,6 +2466,105 @@ body.sb-collapsed .main-content {
 }
 
 /* ════════════════════════════════════════════════
+   BOTTOM NAVIGATION BAR — disabled, nav is inside sidebar drawer
+   ════════════════════════════════════════════════ */
+.sb-bottom-nav { display: none !important; }
+
+@media (max-width: 980px) {
+  /* Hide collapse button — sidebar is a slide-in drawer on mobile */
+  .sidebar .sb-collapse-btn { display: none !important; }
+}
+
+/* ════════════════════════════════════════════════
+   LOGO ANIMATIONS (8 random styles)
+   ════════════════════════════════════════════════ */
+@keyframes logo-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.14); }
+}
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes logo-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/* Spin variants */
+@keyframes logo-spin-glow {
+  0%   { transform: rotate(0deg);   filter: drop-shadow(0 0 4px rgba(139,92,246,.6)); }
+  50%  { transform: rotate(180deg); filter: drop-shadow(0 0 18px rgba(6,182,212,1)) drop-shadow(0 0 32px rgba(139,92,246,.8)); }
+  100% { transform: rotate(360deg); filter: drop-shadow(0 0 4px rgba(139,92,246,.6)); }
+}
+@keyframes logo-spin-float {
+  0%   { transform: rotate(0deg)   translateY(0); }
+  25%  { transform: rotate(90deg)  translateY(-5px); }
+  50%  { transform: rotate(180deg) translateY(0); }
+  75%  { transform: rotate(270deg) translateY(5px); }
+  100% { transform: rotate(360deg) translateY(0); }
+}
+@keyframes logo-spin-pulse {
+  0%   { transform: rotate(0deg)   scale(1); }
+  25%  { transform: rotate(90deg)  scale(1.18); }
+  50%  { transform: rotate(180deg) scale(1); }
+  75%  { transform: rotate(270deg) scale(0.88); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes logo-spin-elastic {
+  0%   { transform: rotate(0deg); }
+  40%  { transform: rotate(200deg); }
+  55%  { transform: rotate(175deg); }
+  70%  { transform: rotate(365deg); }
+  80%  { transform: rotate(350deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes logo-spin-reverse {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+@keyframes logo-spin-disco {
+  0%   { transform: rotate(0deg);   filter: drop-shadow(0 0 8px #7c5cff); }
+  20%  { transform: rotate(72deg);  filter: drop-shadow(0 0 10px #06b6d4); }
+  40%  { transform: rotate(144deg); filter: drop-shadow(0 0 10px #f472b6); }
+  60%  { transform: rotate(216deg); filter: drop-shadow(0 0 10px #facc15); }
+  80%  { transform: rotate(288deg); filter: drop-shadow(0 0 10px #34d399); }
+  100% { transform: rotate(360deg); filter: drop-shadow(0 0 8px #7c5cff); }
+}
+@keyframes logo-spin-tilt {
+  0%   { transform: rotate(0deg)   rotateX(0deg); }
+  25%  { transform: rotate(90deg)  rotateX(20deg); }
+  50%  { transform: rotate(180deg) rotateX(0deg); }
+  75%  { transform: rotate(270deg) rotateX(-20deg); }
+  100% { transform: rotate(360deg) rotateX(0deg); }
+}
+@keyframes logo-shake {
+  0%, 100%{ transform: translateX(0) rotate(0deg); }
+  20%     { transform: translateX(-4px) rotate(-5deg); }
+  40%     { transform: translateX(4px) rotate(5deg); }
+  60%     { transform: translateX(-3px) rotate(-3deg); }
+  80%     { transform: translateX(3px) rotate(3deg); }
+}
+@keyframes logo-bounce {
+  0%, 100% { transform: scale(1) translateY(0); }
+  30%      { transform: scale(1.18) translateY(-5px); }
+  55%      { transform: scale(0.93) translateY(3px); }
+  80%      { transform: scale(1.07) translateY(-2px); }
+}
+@keyframes logo-glow {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(139,92,246,.5)); }
+  50%      { filter: drop-shadow(0 0 16px rgba(139,92,246,1)) drop-shadow(0 0 28px rgba(6,182,212,.7)); }
+}
+@keyframes logo-flip {
+  0%, 40%, 100% { transform: rotateY(0deg); }
+  20%           { transform: rotateY(180deg); }
+}
+@keyframes logo-swing {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(10deg); }
+  75%      { transform: rotate(-10deg); }
+}
+
+/* ════════════════════════════════════════════════
    SHARED — iPhone App-Icon Style Action Buttons
    Used by: new-order, smart-mobile, orders-details
    ════════════════════════════════════════════════ */
@@ -2623,7 +2722,7 @@ body.sb-collapsed .main-content {
 }
 .sb-logo-wrap:hover { box-shadow: 0 6px 22px rgba(139,92,246,.38); transform: translateY(-1px); }
 .sb-logo-img {
-  width: 28px; height: 28px;
+  width: 40px; height: 40px;
   object-fit: contain; border-radius: 6px;
   filter: drop-shadow(0 2px 6px rgba(139,92,246,.5));
 }
@@ -2777,7 +2876,16 @@ body.sb-collapsed .main-content {
   display: grid; place-items: center;
   font-size: 12px; font-weight: 800; color: #fff;
   box-shadow: 0 3px 10px rgba(139,92,246,.40);
+  overflow: hidden;
 }
+.sb-user-avatar-img,
+[data-theme="light"] .sb-user-avatar-img,
+.sb-user-avatar-img:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.sb-user-avatar-img img { width: 36px; height: 36px; object-fit: cover; border-radius: 11px; display: block; }
 .sb-user-info { flex: 1; min-width: 0; }
 .sb-user-name {
   font-size: 12.5px; font-weight: 700; color: #f0f6ff;
@@ -3166,6 +3274,44 @@ html[data-theme="light"] body {
   background: linear-gradient(135deg, #cc0000, #ff3333) !important;
   box-shadow: 0 2px 6px rgba(204,0,0,.28) !important;
 }
+/* Avatar with logo image — override all theme backgrounds */
+.sb-user-avatar.sb-user-avatar-img,
+[data-theme="light"] .sb-user-avatar.sb-user-avatar-img {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Collapsed sidebar: logo image — remove ALL borders and rings */
+.sidebar.sb-collapsed .sb-user-avatar.sb-user-avatar-img,
+.sidebar.sb-collapsed .sb-user-card:has(.sb-user-avatar-img) {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 11px !important;
+  outline: none !important;
+}
+.sidebar.sb-collapsed .sb-user-avatar.sb-user-avatar-img img {
+  border-radius: 11px !important;
+  width: 36px !important;
+  height: 36px !important;
+  object-fit: cover !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* CAMBO logo wrap — remove red tint and border */
+.sb-logo-wrap,
+[data-theme="light"] .sb-logo-wrap {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.sb-logo-wrap:hover,
+[data-theme="light"] .sb-logo-wrap:hover {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
 [data-theme="light"] .sb-user-name { color: #0f0f0f !important; }
 [data-theme="light"] .sb-user-role { color: #606060 !important; }
 [data-theme="light"] .sb-collapse-btn {
@@ -3177,6 +3323,48 @@ html[data-theme="light"] body {
   background: rgba(204,0,0,.08) !important;
   border-color: rgba(204,0,0,.20) !important;
   color: #cc0000 !important;
+}
+
+/* ── Active nav item: override red → purple/violet ── */
+.sb-link.sb-active,
+.sb-link.active,
+[data-theme="light"] .sb-link.sb-active,
+[data-theme="light"] .sb-link.active {
+  background: rgba(139,92,246,.16) !important;
+  border-color: rgba(139,92,246,.28) !important;
+  color: #c4b5fd !important;
+  box-shadow: 0 4px 18px rgba(139,92,246,.15) !important;
+}
+[data-theme="light"] .sb-link.sb-active,
+[data-theme="light"] .sb-link.active {
+  background: rgba(99,102,241,.12) !important;
+  border-color: rgba(99,102,241,.24) !important;
+  color: #4f46e5 !important;
+}
+.sb-link.sb-active .sb-icon,
+.sb-link.active .sb-icon,
+[data-theme="light"] .sb-link.sb-active .sb-icon,
+[data-theme="light"] .sb-link.active .sb-icon {
+  color: #c4b5fd !important;
+}
+[data-theme="light"] .sb-link.sb-active .sb-icon,
+[data-theme="light"] .sb-link.active .sb-icon {
+  color: #4f46e5 !important;
+}
+.sb-link.sb-active .sb-active-dot,
+.sb-link.active .sb-active-dot,
+[data-theme="light"] .sb-link.sb-active .sb-active-dot,
+[data-theme="light"] .sb-link.active .sb-active-dot {
+  background: #8b5cf6 !important;
+  box-shadow: 0 0 7px rgba(139,92,246,.65) !important;
+  opacity: 1 !important;
+}
+.sb-link.sb-active::before,
+.sb-link.active::before,
+[data-theme="light"] .sb-link.sb-active::before,
+[data-theme="light"] .sb-link.active::before {
+  background: linear-gradient(180deg, #8b5cf6, #06b6d4) !important;
+  box-shadow: none !important;
 }
 
 /* ── Cards / panels ── */
