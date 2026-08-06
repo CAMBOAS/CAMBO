@@ -673,13 +673,13 @@
                 </div>
                 <div class="lr-fpanel-body">
                   <div class="lr-fpanel-row">
-                    <label class="lr-fpanel-label" style="--sect-c:#a78bfa">ស្ថានភាព · Status</label>
+                    <label class="lr-fpanel-label" style="--sect-c:#a78bfa">Status</label>
                     <select class="lr-fpanel-select" id="lrFStatus" onchange="setFPChip('status',this.value)">
                       <option value="">— All Statuses —</option>
                     </select>
                   </div>
                   <div class="lr-fpanel-row">
-                    <label class="lr-fpanel-label" style="--sect-c:#06b6d4">ភេទ · Gender</label>
+                    <label class="lr-fpanel-label" style="--sect-c:#06b6d4">Gender</label>
                     <select class="lr-fpanel-select" id="lrFGender" onchange="setFPChip('gender',this.value)">
                       <option value="">— All Genders —</option>
                       <option value="Male">Male / ប្រុស</option>
@@ -688,7 +688,7 @@
                     </select>
                   </div>
                   <div class="lr-fpanel-row">
-                    <label class="lr-fpanel-label" style="--sect-c:#f59e0b">ក្រុម · Groups</label>
+                    <label class="lr-fpanel-label" style="--sect-c:#f59e0b">Groups</label>
                     <select class="lr-fpanel-select" id="lrFGroup" onchange="setFPChip('group',this.value)">
                       <option value="">— All Groups —</option>
                     </select>
@@ -1914,8 +1914,11 @@ async function confirmDelete() {
     var res = await CamboAPI.post({ action: 'helen_loan_delete', key: _deleteLoan.DateTime });
     if (res && res.ok) {
       toast('🗑️ លុបបានជោគជ័យ — ផ្ញើទៅ Trash');
+      var delKey = _deleteLoan.DateTime;
       closeConfirm();
-      loadData();
+      _allLoans = _allLoans.filter(function(l){ return l.DateTime !== delKey; });
+      _allLoans.forEach(function(l,i){ l._idx = i+1; });
+      populateFilters(); applyFilter(); renderCharts();
     } else {
       toast('❌ ' + ((res && res.message) || 'Delete failed'), true);
       btn.disabled = false;
@@ -1924,7 +1927,13 @@ async function confirmDelete() {
   } catch(e) {
     if (location.protocol === 'file:') {
       toast('🗑️ លុបបានជោគជ័យ — ផ្ញើទៅ Trash');
-      closeConfirm(); loadData();
+      var delKey = _deleteLoan ? _deleteLoan.DateTime : null;
+      closeConfirm();
+      if (delKey) {
+        _allLoans = _allLoans.filter(function(l){ return l.DateTime !== delKey; });
+        _allLoans.forEach(function(l,i){ l._idx = i+1; });
+        populateFilters(); applyFilter(); renderCharts();
+      }
     } else {
       toast('❌ Network error', true);
       btn.disabled = false; btn.textContent = 'លុបចោល';
@@ -1941,7 +1950,7 @@ function openAddModal() {
   var groups   = _helenInfor.groups.length   ? _helenInfor.groups   : [...new Set(_allLoans.map(function(l){ return l.Groups||''; }).filter(Boolean))].sort();
   var statuses = _helenInfor.statuses.length ? _helenInfor.statuses : ['Good','Normal','BlackListed','High Risk'];
   var groupOpts  = groups.map(function(g){ return '<option value="'+esc(g)+'">'+esc(g)+'</option>'; }).join('');
-  var statusOpts = statuses.map(function(s){ return '<option value="'+esc(s)+'">'+esc(s)+'</option>'; }).join('');
+  var statusOpts = statuses.map(function(s){ return '<option value="'+esc(s)+'"'+(s==='Normal'?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
   var smDefault  = (_helenInfor.socialMedia.find(function(v){ return v.toLowerCase().indexOf('facebook') >= 0; }) || _helenInfor.socialMedia[0] || '');
   var smOpts     = _helenInfor.socialMedia.map(function(v){ return '<option value="'+esc(v)+'"'+(v===smDefault?' selected':'')+'>'+esc(v)+'</option>'; }).join('');
   var smField    = smOpts
