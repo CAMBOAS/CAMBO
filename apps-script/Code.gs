@@ -253,9 +253,8 @@ function deleteHelenInfor_(type, value) {
   return { ok:false, message:'Not found' };
 }
 
-function findHelenLoanRow_(key) {
-  const ss    = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(LOAN_SHEET);
+function findHelenLoanRow_(key, sheet) {
+  if (!sheet) sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LOAN_SHEET);
   if (!sheet) return -1;
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return -1;
@@ -273,7 +272,7 @@ function updateHelenLoan_(key, loan) {
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(LOAN_SHEET);
   if (!sheet) return false;
-  const rowNum = findHelenLoanRow_(key);
+  const rowNum = findHelenLoanRow_(key, sheet);
   if (rowNum < 0) return false;
   const row = [
     String(loan.DateTime   || key).trim(),
@@ -301,7 +300,7 @@ function deleteHelenLoan_(key) {
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(LOAN_SHEET);
   if (!sheet) return false;
-  const rowNum = findHelenLoanRow_(key);
+  const rowNum = findHelenLoanRow_(key, sheet);
   if (rowNum < 0) return false;
   const rowData = sheet.getRange(rowNum, 1, 1, LOAN_HEADER.length).getValues()[0];
   var trash = ss.getSheetByName('HelenLoanT');
