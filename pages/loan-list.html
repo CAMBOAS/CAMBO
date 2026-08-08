@@ -1972,35 +1972,25 @@ async function confirmDelete() {
   var btn = document.getElementById('lrConfirmDelBtn');
   btn.disabled = true;
   btn.textContent = 'កំពុងលុប...';
+
+  /* Optimistic update first — instant UI on all protocols */
+  var delKey = _deleteLoan.DateTime;
+  closeConfirm();
+  invalidateLocalCache_();
+  _allLoans = _allLoans.filter(function(l){ return l.DateTime !== delKey; });
+  _allLoans.forEach(function(l,i){ l._idx = i+1; });
+  populateFilters(); applyFilter(); renderCharts();
+  toast('🗑️ លុបបានជោគជ័យ — ផ្ញើទៅ Trash');
+
+  /* Background: sync with server — soft warning only on failure */
   try {
-    var res = await CamboAPI.post({ action: 'helen_loan_delete', key: _deleteLoan.DateTime });
-    if (res && res.ok) {
-      toast('🗑️ លុបបានជោគជ័យ — ផ្ញើទៅ Trash');
-      var delKey = _deleteLoan.DateTime;
-      closeConfirm();
-      invalidateLocalCache_();
-      _allLoans = _allLoans.filter(function(l){ return l.DateTime !== delKey; });
-      _allLoans.forEach(function(l,i){ l._idx = i+1; });
-      populateFilters(); applyFilter(); renderCharts();
-    } else {
-      toast('❌ ' + ((res && res.message) || 'Delete failed'), true);
-      btn.disabled = false;
-      btn.textContent = 'លុបចោល';
+    var res = await CamboAPI.post({ action: 'helen_loan_delete', key: delKey });
+    if (res && !res.ok) {
+      toast('⚠️ ' + (res.message || 'Server sync failed — Refresh to verify'), true);
     }
   } catch(e) {
-    if (location.protocol === 'file:') {
-      toast('🗑️ លុបបានជោគជ័យ — ផ្ញើទៅ Trash');
-      var delKey = _deleteLoan ? _deleteLoan.DateTime : null;
-      closeConfirm();
-      invalidateLocalCache_();
-      if (delKey) {
-        _allLoans = _allLoans.filter(function(l){ return l.DateTime !== delKey; });
-        _allLoans.forEach(function(l,i){ l._idx = i+1; });
-        populateFilters(); applyFilter(); renderCharts();
-      }
-    } else {
-      toast('❌ Network error', true);
-      btn.disabled = false; btn.textContent = 'លុបចោល';
+    if (location.protocol !== 'file:') {
+      toast('⚠️ Connection issue — Refresh to verify delete', true);
     }
   }
 }
