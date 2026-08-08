@@ -787,7 +787,7 @@
 
 <script src="../assets/js/layout.js?v=1"></script>
 <script src="../assets/js/dashboard-layout.js?v=1"></script>
-<script src="../assets/js/api.js?v=2"></script>
+<script src="../assets/js/api.js?v=3"></script>
 <script>
 var _allLoans   = [];
 var _filtered   = [];
@@ -949,45 +949,107 @@ async function updateLoanStatus(loan, newStatus) {
 
 /* ── HelenInfor (Groups + Statuses from Google Sheet) ── */
 var _helenInfor = { groups: [], statuses: [], socialMedia: [] };
-/* ── Load data (Retry + Timeout) — single combined request ── */
-async function loadData() {
-  var _refreshBtn = document.querySelector('.lr-btn-refresh');
-  if (_refreshBtn) _refreshBtn.classList.add('spinning');
-  document.getElementById('lrTbody').innerHTML =
-    '<tr><td colspan="17" class="lr-loading">កំពុងផ្ទុកទិន្នន័យ...</td></tr>';
 
-  var success = false;
-  for (var attempt = 0; attempt < 3; attempt++) {
-    try {
-      var data = await Promise.race([
-        CamboAPI.get({ action: 'helen_all' }),
-        new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 25000); })
-      ]);
-      _allLoans = (data.ok && Array.isArray(data.loans)) ? data.loans : [];
-      _allLoans.forEach(function(l,i){ l._idx=i+1; l._date=(l.DateTime||'').split('T')[0]; });
-      if (data.ok) {
-        _helenInfor.groups      = Array.isArray(data.groups)      ? data.groups.filter(function(g){ return g && g.toLowerCase() !== 'groups'; })          : [];
-        _helenInfor.statuses    = Array.isArray(data.statuses)    ? data.statuses.filter(function(s){ return s && s.toLowerCase() !== 'status'; })          : [];
-        _helenInfor.socialMedia = Array.isArray(data.socialMedia) ? data.socialMedia.filter(function(v){ return v && v.toLowerCase() !== 'social media'; }) : [];
-      }
-      success = true;
-      break;
-    } catch(e) {
-      console.warn('[HELEN LOAN] attempt '+(attempt+1)+' failed:', e.message);
-      if (attempt < 2) await new Promise(function(r){ setTimeout(r, 2000); });
-    }
+/* ── Local cache: stale-while-revalidate (5-min TTL) ── */
+var _LS_KEY = 'hl_cache_v1';
+var _LS_TTL = 5 * 60 * 1000;
+
+function applyData_(data) {
+  _allLoans = (data.ok && Array.isArray(data.loans)) ? data.loans : [];
+  _allLoans.forEach(function(l,i){ l._idx=i+1; l._date=(l.DateTime||'').split('T')[0]; });
+  if (data.ok) {
+    _helenInfor.groups      = Array.isArray(data.groups)      ? data.groups.filter(function(g){ return g && g.toLowerCase() !== 'groups'; })          : [];
+    _helenInfor.statuses    = Array.isArray(data.statuses)    ? data.statuses.filter(function(s){ return s && s.toLowerCase() !== 'status'; })          : [];
+    _helenInfor.socialMedia = Array.isArray(data.socialMedia) ? data.socialMedia.filter(function(v){ return v && v.toLowerCase() !== 'social media'; }) : [];
   }
-
-  if (!success) {
-    _allLoans = [];
-    console.error('[HELEN LOAN] loadData failed after 3 attempts');
-    toast('❌ មិនអាចភ្ជាប់ Server — សូម Refresh ម្ដងទៀត', true);
-  }
-
   populateFilters();
   var _urlQ = new URLSearchParams(window.location.search).get('q');
   if (_urlQ) { var s = document.getElementById('lrSrch'); if (s) s.value = _urlQ; }
   applyFilter(); renderCharts();
+}
+
+function invalidateLocalCache_() {
+  try { localStorage.removeItem(_LS_KEY); } catch(e) {}
+}
+
+async function _silentRefresh_() {
+  var fetched = null;
+  try {
+    var data = await Promise.race([
+      CamboAPI.get({ action: 'helen_all' }),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 15000); })
+    ]);
+    if (data && data.ok) {
+      data._ts = Date.now();
+      try { localStorage.setItem(_LS_KEY, JSON.stringify(data)); } catch(e) {}
+      fetched = data;
+    }
+  } catch(e) {}
+  if (fetched) applyData_(fetched);
+}
+
+/* ── Load data — localStorage stale-while-revalidate ── */
+async function loadData(opts) {
+  opts = opts || {};
+  var _refreshBtn = document.querySelector('.lr-btn-refresh');
+  if (_refreshBtn) _refreshBtn.classList.add('spinning');
+
+  /* 1. Show cached data instantly if fresh enough */
+  if (!opts.force) {
+    try {
+      var cached = JSON.parse(localStorage.getItem(_LS_KEY) || 'null');
+      if (cached && cached.ok && (Date.now() - (cached._ts || 0)) < _LS_TTL) {
+        applyData_(cached);
+        if (_refreshBtn) _refreshBtn.classList.remove('spinning');
+        _silentRefresh_(); // refresh in background without blocking UI
+        return;
+      }
+    } catch(e) {}
+  }
+
+  /* 2. No fresh cache — show loading and fetch */
+  document.getElementById('lrTbody').innerHTML =
+    '<tr><td colspan="17" class="lr-loading">កំពុងផ្ទុកទិន្នន័យ...</td></tr>';
+
+  var fetchedData = null;
+  for (var attempt = 0; attempt < 2; attempt++) {
+    try {
+      var data = await Promise.race([
+        CamboAPI.get({ action: 'helen_all' }),
+        new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 15000); })
+      ]);
+      if (data && data.ok) {
+        data._ts = Date.now();
+        try { localStorage.setItem(_LS_KEY, JSON.stringify(data)); } catch(e) {}
+        fetchedData = data;
+        break;
+      }
+    } catch(e) {
+      console.warn('[HELEN LOAN] attempt '+(attempt+1)+' failed:', e.message);
+      if (attempt < 1) await new Promise(function(r){ setTimeout(r, 1000); });
+    }
+  }
+
+  /* Apply data OUTSIDE the fetch try-catch so render errors don't look like fetch failures */
+  if (fetchedData) {
+    applyData_(fetchedData);
+  } else {
+    /* Fall back to stale cache rather than showing empty */
+    try {
+      var stale = JSON.parse(localStorage.getItem(_LS_KEY) || 'null');
+      if (stale && stale.ok) {
+        applyData_(stale);
+        toast('⚠️ បង្ហាញទិន្នន័យចាស់ — Server មិនដំណើរការ', true);
+        if (_refreshBtn) _refreshBtn.classList.remove('spinning');
+        return;
+      }
+    } catch(e) {}
+    _allLoans = [];
+    console.error('[HELEN LOAN] loadData failed');
+    toast('❌ មិនអាចភ្ជាប់ Server — សូម Refresh ម្ដងទៀត', true);
+    populateFilters(); applyFilter(); renderCharts();
+  }
+
   if (_refreshBtn) _refreshBtn.classList.remove('spinning');
 }
 
@@ -1916,6 +1978,7 @@ async function confirmDelete() {
       toast('🗑️ លុបបានជោគជ័យ — ផ្ញើទៅ Trash');
       var delKey = _deleteLoan.DateTime;
       closeConfirm();
+      invalidateLocalCache_();
       _allLoans = _allLoans.filter(function(l){ return l.DateTime !== delKey; });
       _allLoans.forEach(function(l,i){ l._idx = i+1; });
       populateFilters(); applyFilter(); renderCharts();
@@ -1929,6 +1992,7 @@ async function confirmDelete() {
       toast('🗑️ លុបបានជោគជ័យ — ផ្ញើទៅ Trash');
       var delKey = _deleteLoan ? _deleteLoan.DateTime : null;
       closeConfirm();
+      invalidateLocalCache_();
       if (delKey) {
         _allLoans = _allLoans.filter(function(l){ return l.DateTime !== delKey; });
         _allLoans.forEach(function(l,i){ l._idx = i+1; });
@@ -2160,7 +2224,7 @@ async function executeTAAction() {
       _trashLoans = _trashLoans.filter(function(l){ return l.DateTime !== doneKey; });
       _trashLoans.forEach(function(l,i){ l._idx = i+1; });
       applyFilter();
-      if (wasRecover) loadData();
+      if (wasRecover) loadData({ force: true });
     } else {
       toast('❌ ' + ((res && res.message) || 'Failed'), true);
       btn.disabled = false;
@@ -2175,7 +2239,7 @@ async function executeTAAction() {
       if (doneKey) _trashLoans = _trashLoans.filter(function(l){ return l.DateTime !== doneKey; });
       _trashLoans.forEach(function(l,i){ l._idx = i+1; });
       applyFilter();
-      if (wasRecover) loadData();
+      if (wasRecover) loadData({ force: true });
     } else {
       toast('❌ Network error', true);
       btn.disabled = false;
@@ -2293,6 +2357,7 @@ async function saveAdd() {
     if (res && res.ok) {
       toast('✅ Added successfully');
       closeAddModalForce();
+      invalidateLocalCache_();
       /* Optimistic update — no reload needed */
       var newEntry = Object.assign({}, loan, {
         DateTime: loan.DateTime || today_ymd() + 'T00:00:00',
@@ -2309,6 +2374,7 @@ async function saveAdd() {
     if (location.protocol === 'file:' && e.message !== 'timeout') {
       toast('✅ Added successfully');
       closeAddModalForce();
+      invalidateLocalCache_();
       var newEntry = Object.assign({}, loan, {
         DateTime: loan.DateTime || today_ymd() + 'T00:00:00',
         _date: (loan.DateTime || today_ymd() + 'T00:00:00').split('T')[0]
@@ -2442,6 +2508,7 @@ async function saveEdit() {
     ]);
     if (res && res.ok) {
       toast('✅ Saved successfully');
+      invalidateLocalCache_();
       /* Optimistic update — patch local object, re-render immediately */
       Object.assign(_editLoan, updated);
       _editLoan._date = (updated.DateTime || _editLoan.DateTime || '').split('T')[0];
@@ -2455,6 +2522,7 @@ async function saveEdit() {
   } catch(e) {
     if (location.protocol === 'file:' && e.message !== 'timeout') {
       toast('✅ Saved successfully');
+      invalidateLocalCache_();
       Object.assign(_editLoan, updated);
       _editLoan._date = (updated.DateTime || _editLoan.DateTime || '').split('T')[0];
       btn.disabled = false; btn.innerHTML = _saveBtnHTML;

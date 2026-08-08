@@ -14,9 +14,11 @@
  * ════════════════════════════════════════
  */
 
-const TZ          = 'Asia/Phnom_Penh';
-const LOAN_SHEET  = 'HelenLoan';
-const LOAN_HEADER = ['DateTime','FullName','NationalID','DOB','Gender','Phone','Groups','Status','Money','Note','FBName','URL','FacebookCom','ID','FBID'];
+const TZ             = 'Asia/Phnom_Penh';
+const LOAN_SHEET     = 'HelenLoan';
+const LOAN_HEADER    = ['DateTime','FullName','NationalID','DOB','Gender','Phone','Groups','Status','Money','Note','FBName','URL','FacebookCom','ID','FBID'];
+const CACHE_KEY_ALL  = 'helen_all_v1';
+const CACHE_TTL_SEC  = 300; // 5 minutes
 
 /* ── Telegram Config ── បំពេញ BOT_TOKEN និង CHAT_ID ── */
 const TG_BOT_TOKEN = '8665831170:AAF-affx337A48GnTGHuWRe3wuvPDvtnYdo';
@@ -32,7 +34,16 @@ function doGet(e) {
     if (action === 'helen_loan_list') return jsonOutput_({ ok:true, loans: listHelenLoans_() });
     if (action === 'helen_loan_trash')return jsonOutput_({ ok:true, loans: listHelenLoanTrash_() });
     if (action === 'helen_infor')     return jsonOutput_({ ok:true, groups: listHelenInfor_('groups'), statuses: listHelenInfor_('statuses'), websites: listHelenInforWebsites_() });
-    if (action === 'helen_all')       return jsonOutput_({ ok:true, loans: listHelenLoans_(), groups: listHelenInfor_('groups'), statuses: listHelenInfor_('statuses'), socialMedia: listHelenInfor_('socialMedia'), websites: listHelenInforWebsites_() });
+    if (action === 'helen_all') {
+      const cache = CacheService.getScriptCache();
+      const hit   = cache.get(CACHE_KEY_ALL);
+      if (hit) return ContentService.createTextOutput(hit).setMimeType(ContentService.MimeType.JSON);
+      const ss    = SpreadsheetApp.getActiveSpreadsheet();
+      const infor = listAllHelenInfor_(ss);
+      const json  = JSON.stringify({ ok:true, loans: listHelenLoans_(ss), groups: infor.groups, statuses: infor.statuses, socialMedia: infor.socialMedia, websites: infor.websites });
+      cache.put(CACHE_KEY_ALL, json, CACHE_TTL_SEC);
+      return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
+    }
     if (action === 'helen_sheet_url') {
       const ss  = SpreadsheetApp.getActiveSpreadsheet();
       const sh1 = ss.getSheetByName(LOAN_SHEET);
@@ -108,8 +119,8 @@ function doPost(e) {
    HELEN LOAN FUNCTIONS
    ════════════════════════════════════════ */
 
-function listHelenLoans_() {
-  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+function listHelenLoans_(ss) {
+  if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(LOAN_SHEET);
   if (!sheet) return [];
   const lastRow = sheet.getLastRow();
@@ -175,7 +186,31 @@ function listHelenInfor_(type) {
   return data.map(function(r) { return String(r[0] || '').trim(); }).filter(Boolean);
 }
 
+/* Read HelenInfor sheet once and return all columns — avoids 4 separate getValues() calls */
+function listAllHelenInfor_(ss) {
+  if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('HelenInfor');
+  if (!sheet) return { groups:[], statuses:[], socialMedia:[], websites:[] };
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 1) return { groups:[], statuses:[], socialMedia:[], websites:[] };
+  const data      = sheet.getRange(1, 1, lastRow, 5).getValues();
+  const groups    = [], statuses = [], socialMedia = [], websites = [];
+  data.forEach(function(r) {
+    const g = String(r[0]||'').trim(); if (g) groups.push(g);
+    const s = String(r[1]||'').trim(); if (s) statuses.push(s);
+    const m = String(r[2]||'').trim(); if (m) socialMedia.push(m);
+    const n = String(r[3]||'').trim(), u = String(r[4]||'').trim();
+    if (n && u) websites.push({ name:n, url:u });
+  });
+  return { groups, statuses, socialMedia, websites };
+}
+
+function invalidateAllCache_() {
+  try { CacheService.getScriptCache().remove(CACHE_KEY_ALL); } catch(e) {}
+}
+
 function addHelenInfor_(type, value) {
+  invalidateAllCache_();
   if (!value || !String(value).trim()) return { ok:false, message:'Value is empty' };
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('HelenInfor') || ss.insertSheet('HelenInfor');
@@ -199,6 +234,7 @@ function addHelenInfor_(type, value) {
 }
 
 function deleteHelenInfor_(type, value) {
+  invalidateAllCache_();
   if (!value) return { ok:false, message:'Value is empty' };
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('HelenInfor');
@@ -233,6 +269,7 @@ function findHelenLoanRow_(key) {
 }
 
 function updateHelenLoan_(key, loan) {
+  invalidateAllCache_();
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(LOAN_SHEET);
   if (!sheet) return false;
@@ -260,6 +297,7 @@ function updateHelenLoan_(key, loan) {
 }
 
 function deleteHelenLoan_(key) {
+  invalidateAllCache_();
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(LOAN_SHEET);
   if (!sheet) return false;
@@ -282,6 +320,7 @@ function deleteHelenLoan_(key) {
 }
 
 function permDeleteHelenLoan_(key) {
+  invalidateAllCache_();
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const trash = ss.getSheetByName('HelenLoanT');
   if (!trash) return false;
@@ -297,6 +336,7 @@ function permDeleteHelenLoan_(key) {
 }
 
 function recoverHelenLoan_(key) {
+  invalidateAllCache_();
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const trash = ss.getSheetByName('HelenLoanT');
   if (!trash) return false;
@@ -327,6 +367,7 @@ function recoverHelenLoan_(key) {
 }
 
 function addHelenLoan_(loan) {
+  invalidateAllCache_();
   const ss  = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(LOAN_SHEET);
   if (!sheet) {
