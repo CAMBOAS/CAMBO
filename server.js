@@ -15,7 +15,7 @@ const url   = require('url');
 
 const PORT           = 5500;
 const STATIC_DIR     = __dirname;
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_oB8wJbr-7ru9j4GA3ogvcFWCoOP_AC8Nx8XFRK32VFXoSQP1_63pgnnnEcdpTjx1Fw/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwgDXLmktJo69LXa965FaeYKIR76keDIbFS20buSWU6SJvMAgopc-eqZ-uAmpEEflTQqw/exec';
 
 const FB_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
