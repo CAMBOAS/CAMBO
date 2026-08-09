@@ -19,10 +19,35 @@ const LOAN_SHEET     = 'HelenLoan';
 const LOAN_HEADER    = ['DateTime','FullName','NationalID','DOB','Gender','Phone','Groups','Status','Money','Note','FBName','URL','FacebookCom','ID','FBID','Code'];
 const CACHE_KEY_ALL  = 'helen_all_v1';
 const CACHE_TTL_SEC  = 300; // 5 minutes
+const USERS_SHEET    = 'HelenUsers'; // cols: Username | PIN | Status(Active/Inactive) | Role(Admin/Staff) | DisplayName
 
 /* ── Telegram Config ── បំពេញ BOT_TOKEN និង CHAT_ID ── */
 const TG_BOT_TOKEN = '8665831170:AAF-affx337A48GnTGHuWRe3wuvPDvtnYdo';
 const TG_CHAT_ID   = '-5082132643';
+
+/* ════════════════════════════════════════
+   AUTH HELPER
+   ════════════════════════════════════════ */
+function validateAuth_(u, p) {
+  if (!u || !p) return null;
+  try {
+    var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(USERS_SHEET);
+    if (!sh || sh.getLastRow() <= 1) return null;
+    var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 5).getValues();
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() === u &&
+          String(rows[i][1]).trim() === p &&
+          String(rows[i][2]).trim().toLowerCase() === 'active') {
+        return {
+          username: String(rows[i][0]).trim(),
+          role:     String(rows[i][3] || 'Staff').trim(),
+          name:     String(rows[i][4] || rows[i][0]).trim()
+        };
+      }
+    }
+  } catch(ex) {}
+  return null;
+}
 
 /* ════════════════════════════════════════
    HTTP HANDLERS
@@ -34,7 +59,20 @@ function doGet(e) {
       return doPost({ postData: { contents: e.parameter.body } });
     }
     const action = String((e && e.parameter && e.parameter.action) || 'status').trim();
-    if (action === 'status')          return jsonOutput_({ ok:true, status:'running', message:'HELEN LOAN API is working.' });
+
+    /* ── Public: no auth ── */
+    if (action === 'status') return jsonOutput_({ ok:true, status:'running', message:'HELEN LOAN API is working.' });
+    if (action === 'helen_login') {
+      var _lr = validateAuth_(String(e.parameter.u||'').trim(), String(e.parameter.p||'').trim());
+      if (!_lr) return jsonOutput_({ ok:false, message:'ឈ្មោះ ឬ PIN មិនត្រូវ' });
+      return jsonOutput_({ ok:true, name:_lr.name, role:_lr.role, username:_lr.username });
+    }
+
+    /* ── Auth check for all other GET actions ── */
+    var _au = String(e.parameter.u||'').trim();
+    var _ap = String(e.parameter.p||'').trim();
+    if (!validateAuth_(_au, _ap)) return jsonOutput_({ ok:false, message:'auth_required', code:401 });
+
     if (action === 'helen_loan_list') return jsonOutput_({ ok:true, loans: listHelenLoans_() });
     if (action === 'helen_loan_trash')return jsonOutput_({ ok:true, loans: listHelenLoanTrash_() });
     if (action === 'helen_infor')     return jsonOutput_({ ok:true, groups: listHelenInfor_('groups'), statuses: listHelenInfor_('statuses'), websites: listHelenInforWebsites_() });
@@ -107,6 +145,18 @@ function doPost(e) {
   try {
     const body   = JSON.parse(e.postData.contents || '{}');
     const action = String(body.action || '').trim();
+
+    /* ── Public: login ── */
+    if (action === 'helen_login') {
+      var _lr2 = validateAuth_(String(body.username||'').trim(), String(body.pin||'').trim());
+      if (!_lr2) return jsonOutput_({ ok:false, message:'ឈ្មោះ ឬ PIN មិនត្រូវ' });
+      return jsonOutput_({ ok:true, name:_lr2.name, role:_lr2.role, username:_lr2.username });
+    }
+
+    /* ── Auth check for all write actions ── */
+    var _bu = String((body.auth&&body.auth.u)||'').trim();
+    var _bp = String((body.auth&&body.auth.p)||'').trim();
+    if (!validateAuth_(_bu, _bp)) return jsonOutput_({ ok:false, message:'auth_required', code:401 });
 
     if (action === 'helen_loan_add') {
       addHelenLoan_(body.loan || {});

@@ -1,0 +1,33 @@
+(function () {
+  'use strict';
+  var KEY = 'helenAuth';
+
+  function get() {
+    try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e) { return null; }
+  }
+
+  function save(data) {
+    localStorage.setItem(KEY, JSON.stringify(data));
+  }
+
+  function clear() {
+    localStorage.removeItem(KEY);
+  }
+
+  /* Call at top of every protected page — redirects to login if not authenticated */
+  function check() {
+    var auth = get();
+    if (!auth || !auth.u || !auth.p) {
+      location.replace('login.html');
+      return false;
+    }
+    return true;
+  }
+
+  function logout() {
+    clear();
+    location.replace('login.html');
+  }
+
+  window.HelenAuth = { get: get, save: save, clear: clear, check: check, logout: logout };
+})();
