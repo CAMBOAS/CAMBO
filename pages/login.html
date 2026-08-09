@@ -1,160 +1,382 @@
 <!DOCTYPE html>
-<html lang="km">
+<html lang="en">
 <head>
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ចូលប្រើ - HELEN LOAN</title>
+  <title>Sign In — HELEN LOAN</title>
   <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Tokens ── */
     :root {
-      --bg:    #f1f5f9;
-      --card:  #ffffff;
-      --text:  #0f172a;
-      --muted: #64748b;
-      --line:  rgba(148,163,184,.2);
-      --accent:#7c5cff;
-      --accent2:#06b6d4;
-      --err:   #ef4444;
-      --inp-bg:#f8fafc;
-      --inp-border:rgba(148,163,184,.3);
-      --inp-focus:rgba(124,92,255,.5);
-      --shadow:0 8px 40px rgba(15,23,42,.10);
+      --accent:  #7c5cff;
+      --accent2: #06b6d4;
+      --err:     #ef4444;
     }
-    [data-theme="dark"] {
-      --bg:    #04060f;
-      --card:  rgba(15,23,42,.88);
-      --text:  #f1f5f9;
-      --muted: #94a3b8;
-      --line:  rgba(148,163,184,.14);
-      --inp-bg:rgba(255,255,255,.05);
-      --inp-border:rgba(148,163,184,.2);
-      --shadow:0 8px 40px rgba(0,0,0,.45);
+
+    /* ── Light ── */
+    html[data-theme="light"] {
+      --bg-from: #ede9fe;
+      --bg-to:   #e0f2fe;
+      --card:    #ffffff;
+      --card-border: rgba(124,92,255,.14);
+      --text:    #0f172a;
+      --muted:   #64748b;
+      --inp-bg:  #f8fafc;
+      --inp-border: rgba(148,163,184,.28);
+      --inp-focus-bg: rgba(124,92,255,.06);
+      --inp-focus-ring: rgba(124,92,255,.18);
+      --shadow:  0 24px 64px rgba(99,102,241,.18), 0 4px 20px rgba(0,0,0,.07);
+      --blob1:   rgba(124,92,255,.14);
+      --blob2:   rgba(6,182,212,.12);
+      --divider: rgba(148,163,184,.3);
     }
+
+    /* ── Dark ── */
+    html[data-theme="dark"] {
+      --bg-from: #07091a;
+      --bg-to:   #060d18;
+      --card:    rgba(14,18,40,.93);
+      --card-border: rgba(124,92,255,.22);
+      --text:    #f1f5f9;
+      --muted:   #94a3b8;
+      --inp-bg:  rgba(255,255,255,.05);
+      --inp-border: rgba(148,163,184,.16);
+      --inp-focus-bg: rgba(124,92,255,.1);
+      --inp-focus-ring: rgba(124,92,255,.22);
+      --shadow:  0 24px 64px rgba(0,0,0,.55), 0 0 0 1px rgba(124,92,255,.18);
+      --blob1:   rgba(124,92,255,.22);
+      --blob2:   rgba(6,182,212,.18);
+      --divider: rgba(148,163,184,.14);
+    }
+
+    /* ── Base ── */
     html, body {
       min-height: 100vh;
-      font-family: 'Noto Sans Khmer', 'Inter', system-ui, sans-serif;
-      background: var(--bg);
+      min-height: 100dvh;
+      font-family: system-ui, -apple-system, sans-serif;
       color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
-    [data-theme="dark"] body {
-      background: radial-gradient(ellipse at top left, #172554 0%, #090b16 42%, #04060f 100%);
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background: linear-gradient(145deg, var(--bg-from) 0%, var(--bg-to) 100%);
     }
+
+    /* ── Decorative blobs ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      z-index: -1;
+      pointer-events: none;
+      animation: blobDrift 18s ease-in-out infinite alternate;
+    }
+    .blob-1 {
+      width: 520px; height: 520px;
+      background: var(--blob1);
+      top: -160px; left: -120px;
+      animation-delay: 0s;
+    }
+    .blob-2 {
+      width: 420px; height: 420px;
+      background: var(--blob2);
+      bottom: -100px; right: -80px;
+      animation-delay: -7s;
+    }
+    @keyframes blobDrift {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(30px,20px) scale(1.06); }
+    }
+
+    /* ── Wrap ── */
     .wrap {
       width: 100%;
-      max-width: 400px;
-      padding: 24px 16px calc(24px + env(safe-area-inset-bottom,0px));
+      max-width: 420px;
+      padding: 20px 16px calc(24px + env(safe-area-inset-bottom,0px));
     }
+
+    /* ── Card ── */
     .card {
       background: var(--card);
-      border-radius: 24px;
-      padding: 36px 32px 32px;
+      border-radius: 28px;
+      padding: 40px 36px 36px;
       box-shadow: var(--shadow);
-      border: 1px solid var(--line);
+      border: 1px solid var(--card-border);
+      position: relative;
+      overflow: hidden;
+      animation: cardUp .5s cubic-bezier(.22,1,.36,1) both;
     }
-    [data-theme="dark"] .card {
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+    html[data-theme="dark"] .card {
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
     }
+
+    /* Top gradient stripe */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+      border-radius: 28px 28px 0 0;
+    }
+
+    @keyframes cardUp {
+      from { opacity: 0; transform: translateY(28px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0)   scale(1); }
+    }
+
+    /* ── Logo area ── */
     .logo-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 28px;
+      gap: 12px;
+      margin-bottom: 30px;
     }
+
+    .logo-ring {
+      width: 82px; height: 82px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(145deg, rgba(124,92,255,.12), rgba(6,182,212,.08));
+      position: relative;
+      animation: logoFloat 7s ease-in-out infinite;
+    }
+
+    /* Spinning gradient border */
+    .logo-ring::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      padding: 2px;
+      border-radius: 26px;
+      background: conic-gradient(from 0deg, var(--accent), var(--accent2), rgba(124,92,255,0) 50%, var(--accent));
+      animation: spinBorder 2.5s linear infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    @keyframes spinBorder {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 8-phase logo animation */
+    @keyframes logoFloat {
+      /* 1 – Rest */
+      0%    { transform: scale(1) translateY(0) rotate(0deg);
+              box-shadow: 0 0 32px rgba(124,92,255,.25), 0 4px 16px rgba(0,0,0,.08); }
+      /* 2 – Rise & Glow */
+      12.5% { transform: scale(1.07) translateY(-7px) rotate(0deg);
+              box-shadow: 0 0 58px rgba(124,92,255,.58), 0 14px 32px rgba(0,0,0,.13); }
+      /* 3 – Tilt Clockwise */
+      25%   { transform: scale(1.03) translateY(-4px) rotate(10deg);
+              box-shadow: 0 0 46px rgba(6,182,212,.48), 0 10px 22px rgba(0,0,0,.1); }
+      /* 4 – Peak Glow Burst */
+      37.5% { transform: scale(1.12) translateY(-10px) rotate(0deg);
+              box-shadow: 0 0 76px rgba(124,92,255,.72), 0 20px 44px rgba(0,0,0,.17); }
+      /* 5 – Drop & Squish */
+      50%   { transform: scale(0.95) translateY(5px) rotate(-7deg);
+              box-shadow: 0 0 14px rgba(124,92,255,.1), 0 2px 8px rgba(0,0,0,.05); }
+      /* 6 – Bounce Up */
+      62.5% { transform: scale(1.07) translateY(-5px) rotate(0deg);
+              box-shadow: 0 0 52px rgba(124,92,255,.52), 0 12px 28px rgba(0,0,0,.12); }
+      /* 7 – Wobble Left */
+      75%   { transform: scale(1.02) translateY(-2px) rotate(-7deg);
+              box-shadow: 0 0 42px rgba(6,182,212,.4), 0 8px 18px rgba(0,0,0,.09); }
+      /* 8 – Settle */
+      87.5% { transform: scale(1.01) translateY(-1px) rotate(0deg);
+              box-shadow: 0 0 36px rgba(124,92,255,.3), 0 5px 14px rgba(0,0,0,.08); }
+      /* Return */
+      100%  { transform: scale(1) translateY(0) rotate(0deg);
+              box-shadow: 0 0 32px rgba(124,92,255,.25), 0 4px 16px rgba(0,0,0,.08); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .logo-ring { animation: none; box-shadow: 0 0 32px rgba(124,92,255,.2), 0 4px 16px rgba(0,0,0,.08); border: 1.5px solid rgba(124,92,255,.28); }
+      .logo-ring::after { animation: none; display: none; }
+    }
+
     .logo-img {
-      width: 64px;
-      height: 64px;
-      border-radius: 18px;
+      width: 54px; height: 54px;
       object-fit: contain;
+      border-radius: 14px;
     }
+
     .logo-title {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 900;
-      letter-spacing: .04em;
+      letter-spacing: .06em;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      margin-top: 2px;
     }
+
     .logo-sub {
-      font-size: 12px;
+      font-size: 12.5px;
       color: var(--muted);
       text-align: center;
-      margin-top: -6px;
+      margin-top: -4px;
     }
-    .field { margin-bottom: 16px; }
-    .field label {
-      display: block;
-      font-size: 11.5px;
-      font-weight: 700;
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+      font-size: 10.5px;
       color: var(--muted);
-      letter-spacing: .05em;
+      opacity: .65;
+      letter-spacing: .06em;
       text-transform: uppercase;
-      margin-bottom: 7px;
     }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--divider);
+    }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .field label svg { opacity: .7; }
+
+    .field-inner { position: relative; }
+
+    .field-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      opacity: .55;
+      pointer-events: none;
+      line-height: 0;
+    }
+
     .field input {
       width: 100%;
-      padding: 13px 14px;
+      padding: 14px 14px 14px 44px;
       background: var(--inp-bg);
       border: 1.5px solid var(--inp-border);
-      border-radius: 12px;
+      border-radius: 14px;
       color: var(--text);
-      font-size: 15px;
+      font-size: 16px;
       font-family: inherit;
       outline: none;
-      transition: border-color .15s, box-shadow .15s;
+      transition: border-color .18s, box-shadow .18s, background .18s;
     }
     .field input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--inp-focus);
+      background: var(--inp-focus-bg);
+      box-shadow: 0 0 0 4px var(--inp-focus-ring);
     }
-    .field input::placeholder { color: var(--muted); opacity: .6; }
-    .pin-wrap { position: relative; }
-    .pin-wrap input { padding-right: 44px; letter-spacing: .1em; }
+    .field input::placeholder { color: var(--muted); opacity: .45; }
+
+    /* PIN */
+    .pin-wrap input { padding-right: 50px; letter-spacing: .2em; font-size: 18px; }
+
     .pin-eye {
-      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
       background: none; border: none; cursor: pointer; color: var(--muted);
-      padding: 4px; line-height: 0;
+      padding: 5px; line-height: 0; opacity: .55; transition: opacity .15s;
     }
+    .pin-eye:hover { opacity: 1; }
+
+    /* ── Error ── */
     .err-box {
-      background: rgba(239,68,68,.1);
-      border: 1px solid rgba(239,68,68,.3);
-      border-radius: 10px;
-      padding: 10px 13px;
-      font-size: 13px;
-      color: var(--err);
-      margin-bottom: 16px;
       display: none;
+      align-items: flex-start;
+      gap: 9px;
+      background: rgba(239,68,68,.08);
+      border: 1px solid rgba(239,68,68,.25);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #ef4444;
+      margin-bottom: 18px;
+      line-height: 1.5;
     }
+    .err-box svg { flex-shrink: 0; margin-top: 2px; }
+    .err-content { display: flex; flex-direction: column; gap: 5px; }
+    .err-admin {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .admin-link {
+      color: #22c55e;
+      font-weight: 900;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      letter-spacing: .02em;
+      transition: opacity .15s;
+    }
+    .admin-link:hover { opacity: .8; text-decoration: underline; }
+
+    /* ── Button ── */
     .btn-login {
       width: 100%;
-      padding: 15px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      padding: 16px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
       color: #fff;
       border: none;
-      border-radius: 14px;
-      font-size: 15px;
+      border-radius: 16px;
+      font-size: 15.5px;
       font-weight: 800;
       font-family: inherit;
       cursor: pointer;
-      transition: .18s;
-      box-shadow: 0 4px 20px rgba(124,92,255,.35);
+      transition: transform .18s, box-shadow .18s, opacity .15s;
+      box-shadow: 0 6px 24px rgba(124,92,255,.4);
       margin-top: 4px;
       position: relative;
+      letter-spacing: .03em;
     }
-    .btn-login:active { transform: scale(.97); }
+    .btn-login:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(124,92,255,.5);
+    }
+    .btn-login:not(:disabled):active { transform: scale(.97); }
     .btn-login:disabled { opacity: .6; cursor: not-allowed; }
+
     .spin {
       display: none;
-      width: 18px; height: 18px;
+      width: 20px; height: 20px;
       border: 2.5px solid rgba(255,255,255,.3);
       border-top-color: #fff;
       border-radius: 50%;
@@ -162,45 +384,142 @@
       position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
     }
     @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+    /* ── Footer ── */
+    .login-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--muted);
+      opacity: .55;
+      text-align: center;
+      animation: cardUp .55s .12s cubic-bezier(.22,1,.36,1) both;
+      padding-bottom: 4px;
+    }
+    .login-footer .dot { opacity: .5; }
+    .login-footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: opacity .15s;
+    }
+    .login-footer a:hover { opacity: 1; text-decoration: underline; }
+    .fb-icon { color: #1877f2; }
+
+    /* ── Mobile tweaks ── */
+    @media (max-width: 480px) {
+      .card { padding: 32px 22px 28px; border-radius: 24px; }
+      .logo-ring { width: 72px; height: 72px; border-radius: 20px; }
+      .logo-img  { width: 48px; height: 48px; }
+      .logo-title { font-size: 22px; }
+      .btn-login  { padding: 15px; font-size: 15px; border-radius: 14px; }
+    }
+    @media (max-width: 360px) {
+      .card { padding: 28px 18px 24px; }
+      .logo-title { font-size: 20px; }
+    }
   </style>
 </head>
 <body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
   <div class="wrap">
     <div class="card">
+
+      <!-- Logo -->
       <div class="logo-wrap">
-        <img src="../images/logo/LOGO.png" class="logo-img" alt="HELEN LOAN" onerror="this.style.display='none'">
+        <div class="logo-ring">
+          <img src="../images/logo/LOGO.png" class="logo-img" alt="HELEN LOAN"
+               onerror="this.style.display='none'">
+        </div>
         <div class="logo-title">HELEN LOAN</div>
-        <div class="logo-sub">ចូលគណនីដើម្បីប្រើប្រាស់ប្រព័ន្ធ</div>
+        <div class="logo-sub">Sign in to access your account</div>
       </div>
 
+      <div class="divider">Enter your credentials</div>
+
+      <!-- Username -->
       <div class="field">
-        <label>ឈ្មោះអ្នកប្រើ</label>
-        <input id="loginUser" type="text" placeholder="ឈ្មោះ..." autocomplete="username" autocapitalize="none" spellcheck="false">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Username
+        </label>
+        <div class="field-inner">
+          <span class="field-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </span>
+          <input id="loginUser" type="text" placeholder="Username..."
+                 autocomplete="username" autocapitalize="none" spellcheck="false">
+        </div>
       </div>
+
+      <!-- PIN -->
       <div class="field">
-        <label>PIN</label>
-        <div class="pin-wrap">
-          <input id="loginPin" type="password" inputmode="numeric" placeholder="••••" autocomplete="current-password">
-          <button class="pin-eye" type="button" onclick="togglePin(this)" title="បង្ហាញ/លាក់ PIN">
-            <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          PIN
+        </label>
+        <div class="field-inner pin-wrap">
+          <span class="field-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <input id="loginPin" type="password" inputmode="numeric"
+                 placeholder="••••" autocomplete="current-password">
+          <button class="pin-eye" type="button" onclick="togglePin(this)" title="Show/Hide PIN">
+            <svg id="eyeIcon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
             </svg>
           </button>
         </div>
       </div>
 
-      <div class="err-box" id="loginErr"></div>
+      <!-- Error -->
+      <div class="err-box" id="loginErr">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="err-content">
+          <span id="loginErrMsg"></span>
+          <div class="err-admin" id="loginErrAdmin">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.39 18a19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 3.18 2 2 0 0 1 4.11 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span>Please contact</span>
+            <a class="admin-link" href="https://www.facebook.com/SEREYROB22" target="_blank" rel="noopener noreferrer">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+              ADMIN
+            </a>
+          </div>
+        </div>
+      </div>
 
+      <!-- Button -->
       <button class="btn-login" id="loginBtn" onclick="doLogin()">
-        <span id="btnText">ចូលប្រើប្រាស់</span>
+        <span id="btnText">Sign In</span>
         <span class="spin" id="btnSpin"></span>
       </button>
+
     </div>
+
+    <footer class="login-footer">
+      <span>© <span id="cpYear"></span> HELEN LOAN</span>
+      <span class="dot">·</span>
+      <span>Design By
+        <a href="https://www.facebook.com/SEREYROB22" target="_blank" rel="noopener noreferrer">
+          <svg class="fb-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          CAMBO
+        </a>
+      </span>
+    </footer>
   </div>
 
 <script src="../assets/js/api.js?v=8"></script>
 <script>
-  /* Redirect if already logged in (and not expired) */
+  /* Redirect if already logged in */
   (function() {
     try {
       var a = JSON.parse(localStorage.getItem('helenAuth') || 'null');
@@ -210,11 +529,8 @@
         localStorage.removeItem('helenAuth');
       }
     } catch(e) {}
-    /* Show expired notice if redirected here after expiry */
     if (location.search.indexOf('expired=1') !== -1) {
-      var el = document.getElementById('loginErr');
-      el.textContent = 'វគ្គប្រើប្រាស់បានផុតកំណត់ — សូម Login ម្ដងទៀត';
-      el.style.display = 'block';
+      showErr('Your session has expired — please sign in again', true);
     }
   })();
 
@@ -230,11 +546,10 @@
     if (_busy) return;
     var u = document.getElementById('loginUser').value.trim();
     var p = document.getElementById('loginPin').value.trim();
-    var errEl = document.getElementById('loginErr');
-    errEl.style.display = 'none';
+    document.getElementById('loginErr').style.display = 'none';
 
-    if (!u) { showErr('សូមបញ្ចូលឈ្មោះអ្នកប្រើ'); document.getElementById('loginUser').focus(); return; }
-    if (!p) { showErr('សូមបញ្ចូល PIN'); document.getElementById('loginPin').focus(); return; }
+    if (!u) { showErr('Please enter your username'); document.getElementById('loginUser').focus(); return; }
+    if (!p) { showErr('Please enter your PIN'); document.getElementById('loginPin').focus(); return; }
 
     _busy = true;
     document.getElementById('loginBtn').disabled = true;
@@ -247,14 +562,20 @@
         var _exp = res.expDate
           ? new Date(res.expDate + 'T23:59:59').getTime()
           : Date.now() + 7 * 24 * 60 * 60 * 1000;
-        localStorage.setItem('helenAuth', JSON.stringify({ u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || '' }));
-        var next = new URLSearchParams(location.search).get('next') || 'loan-list.html';
-        location.replace(next);
+        if (res.expDate && Date.now() > _exp) {
+          showErr('Your account has expired — please contact Admin to renew access.', true);
+        } else {
+          localStorage.setItem('helenAuth', JSON.stringify({
+            u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || ''
+          }));
+          var next = new URLSearchParams(location.search).get('next') || 'loan-list.html';
+          location.replace(next);
+        }
       } else {
-        showErr(res && res.message ? res.message : 'ឈ្មោះ ឬ PIN មិនត្រូវ');
+        showErr('Incorrect username or PIN', true);
       }
     } catch(err) {
-      showErr('មិនអាចភ្ជាប់ Server — សូមពិនិត្យ Internet');
+      showErr('Unable to connect to server — please check your internet', false);
     }
 
     _busy = false;
@@ -263,16 +584,17 @@
     document.getElementById('btnSpin').style.display = 'none';
   }
 
-  function showErr(msg) {
-    var el = document.getElementById('loginErr');
-    el.textContent = msg;
-    el.style.display = 'block';
+  function showErr(msg, showAdmin) {
+    document.getElementById('loginErrMsg').textContent = msg;
+    document.getElementById('loginErrAdmin').style.display = showAdmin ? 'flex' : 'none';
+    document.getElementById('loginErr').style.display = 'flex';
   }
 
-  /* Enter key submits */
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doLogin();
   });
+
+  document.getElementById('cpYear').textContent = new Date().getFullYear();
 </script>
 </body>
 </html>
