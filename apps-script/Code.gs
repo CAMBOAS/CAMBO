@@ -319,6 +319,7 @@ function updateHelenLoan_(key, loan) {
     String(loan.FBID        || '').trim(),
   ];
   sheet.getRange(rowNum, 1, 1, row.length).setValues([row]);
+  try { sendTelegramNotify_(loan, loan.DateTime || key, 'edit'); } catch(e) {}
   return true;
 }
 
@@ -342,6 +343,11 @@ function deleteHelenLoan_(key) {
   const destRow = lastTrash > 1 ? 2 : trash.getLastRow() + 1;
   trash.getRange(destRow, 1, 1, rowData.length).setValues([rowData]);
   sheet.deleteRow(rowNum);
+  try {
+    var loanObj = {};
+    LOAN_HEADER.forEach(function(col, i) { loanObj[col] = rowData[i]; });
+    sendTelegramNotify_(loanObj, loanObj.DateTime || key, 'delete');
+  } catch(e) {}
   return true;
 }
 
@@ -432,14 +438,15 @@ function addHelenLoan_(loan) {
 /* ════════════════════════════════════════
    TELEGRAM NOTIFICATION
    ════════════════════════════════════════ */
-function sendTelegramNotify_(loan, dateTime) {
+function sendTelegramNotify_(loan, dateTime, action) {
   if (!TG_BOT_TOKEN || TG_BOT_TOKEN === 'YOUR_BOT_TOKEN') return;
   if (!TG_CHAT_ID   || TG_CHAT_ID   === 'YOUR_CHAT_ID')   return;
+  action = action || 'add';
 
   /* Format date DD/MM/YYYY */
   var dtStr = '';
   try {
-    var d = new Date(dateTime);
+    var d = new Date(dateTime instanceof Date ? dateTime : String(dateTime));
     dtStr = Utilities.formatDate(d, TZ, 'dd/MM/yyyy');
   } catch(e) { dtStr = String(dateTime || '').substring(0, 10); }
 
@@ -452,7 +459,12 @@ function sendTelegramNotify_(loan, dateTime) {
   var status = String(loan.Status      || '—').trim();
   var fbid   = String(loan.FBID        || '').trim();
 
-  var msg = '👤 ឈ្មោះ: ' + name   + '\n'
+  var header = action === 'delete' ? '🗑 *ទិន្នន័យត្រូវបានលុប*\n━━━━━━━━━━━━━━━\n'
+             : action === 'edit'   ? '✏️ *ទិន្នន័យត្រូវបានកែសម្រួល*\n━━━━━━━━━━━━━━━\n'
+             :                       '';
+
+  var msg = header
+    + '👤 ឈ្មោះ: ' + name   + '\n'
     + '🪪 NID: '   + nid    + '\n'
     + '📱 ទូរស័ព្ទ: ' + phone  + '\n'
     + '⚧ ភេទ: '    + gender + '\n'
