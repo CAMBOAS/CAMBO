@@ -29,6 +29,10 @@ const TG_CHAT_ID   = '-5082132643';
    ════════════════════════════════════════ */
 function doGet(e) {
   try {
+    /* Write actions via GET ?body=... — check FIRST before action defaults to 'status' */
+    if (e && e.parameter && e.parameter.body) {
+      return doPost({ postData: { contents: e.parameter.body } });
+    }
     const action = String((e && e.parameter && e.parameter.action) || 'status').trim();
     if (action === 'status')          return jsonOutput_({ ok:true, status:'running', message:'HELEN LOAN API is working.' });
     if (action === 'helen_loan_list') return jsonOutput_({ ok:true, loans: listHelenLoans_() });
@@ -69,6 +73,29 @@ function doGet(e) {
         }
       }
       return jsonOutput_({ success: matched });
+    }
+    /* Simple key-based write actions via GET (file:// CORS workaround) */
+    if (action === 'helen_loan_delete') {
+      const key = String(e.parameter.key || '').trim();
+      const deleted = deleteHelenLoan_(key);
+      return jsonOutput_({ ok: deleted, message: deleted ? 'Deleted' : 'Row not found' });
+    }
+    if (action === 'helen_loan_recover') {
+      const key = String(e.parameter.key || '').trim();
+      const recovered = recoverHelenLoan_(key);
+      return jsonOutput_({ ok: recovered, message: recovered ? 'Recovered' : 'Row not found' });
+    }
+    if (action === 'helen_loan_perm_delete') {
+      const key = String(e.parameter.key || '').trim();
+      const done = permDeleteHelenLoan_(key);
+      return jsonOutput_({ ok: done, message: done ? 'Deleted' : 'Row not found' });
+    }
+    if (action === 'helen_infor_delete') {
+      return jsonOutput_(deleteHelenInfor_(e.parameter.type || '', e.parameter.value || ''));
+    }
+    /* Write actions via GET ?body=... (add/update — body check still available) */
+    if (e && e.parameter && e.parameter.body) {
+      return doPost({ postData: { contents: e.parameter.body } });
     }
     return jsonOutput_({ ok:false, message:'Unknown action: ' + action });
   } catch(err) {

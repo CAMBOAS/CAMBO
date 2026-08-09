@@ -787,7 +787,7 @@
 
 <script src="../assets/js/layout.js?v=1"></script>
 <script src="../assets/js/dashboard-layout.js?v=1"></script>
-<script src="../assets/js/api.js?v=6"></script>
+<script src="../assets/js/api.js?v=8"></script>
 <script>
 var _allLoans   = [];
 var _filtered   = [];
@@ -950,10 +950,6 @@ async function updateLoanStatus(loan, newStatus) {
 /* ── HelenInfor (Groups + Statuses from Google Sheet) ── */
 var _helenInfor = { groups: [], statuses: [], socialMedia: [] };
 
-/* ── Local cache: stale-while-revalidate (5-min TTL) ── */
-var _LS_KEY = 'hl_cache_v1';
-var _LS_TTL = 5 * 60 * 1000;
-
 function applyData_(data) {
   _allLoans = (data.ok && Array.isArray(data.loans)) ? data.loans : [];
   _allLoans.forEach(function(l,i){ l._idx=i+1; l._date=(l.DateTime||'').split('T')[0]; });
@@ -968,46 +964,14 @@ function applyData_(data) {
   applyFilter(); renderCharts();
 }
 
-function invalidateLocalCache_() {
-  try { localStorage.removeItem(_LS_KEY); } catch(e) {}
-}
+function invalidateLocalCache_() { /* no-op — cache removed */ }
 
-async function _silentRefresh_() {
-  var fetched = null;
-  try {
-    var data = await Promise.race([
-      CamboAPI.get({ action: 'helen_all' }),
-      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 15000); })
-    ]);
-    if (data && data.ok) {
-      data._ts = Date.now();
-      try { localStorage.setItem(_LS_KEY, JSON.stringify(data)); } catch(e) {}
-      fetched = data;
-    }
-  } catch(e) {}
-  if (fetched) applyData_(fetched);
-}
-
-/* ── Load data — localStorage stale-while-revalidate ── */
+/* ── Load data — always fetch fresh from Google Sheets ── */
 async function loadData(opts) {
   opts = opts || {};
   var _refreshBtn = document.querySelector('.lr-btn-refresh');
   if (_refreshBtn) _refreshBtn.classList.add('spinning');
 
-  /* 1. Show cached data instantly if fresh enough */
-  if (!opts.force) {
-    try {
-      var cached = JSON.parse(localStorage.getItem(_LS_KEY) || 'null');
-      if (cached && cached.ok && (Date.now() - (cached._ts || 0)) < _LS_TTL) {
-        applyData_(cached);
-        if (_refreshBtn) _refreshBtn.classList.remove('spinning');
-        _silentRefresh_(); // refresh in background without blocking UI
-        return;
-      }
-    } catch(e) {}
-  }
-
-  /* 2. No fresh cache — show loading and fetch */
   document.getElementById('lrTbody').innerHTML =
     '<tr><td colspan="17" class="lr-loading">កំពុងផ្ទុកទិន្នន័យ...</td></tr>';
 
@@ -1016,36 +980,19 @@ async function loadData(opts) {
     try {
       var data = await Promise.race([
         CamboAPI.get({ action: 'helen_all' }),
-        new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 15000); })
+        new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 30000); })
       ]);
-      if (data && data.ok) {
-        data._ts = Date.now();
-        try { localStorage.setItem(_LS_KEY, JSON.stringify(data)); } catch(e) {}
-        fetchedData = data;
-        break;
-      }
+      if (data && data.ok) { fetchedData = data; break; }
     } catch(e) {
       console.warn('[HELEN LOAN] attempt '+(attempt+1)+' failed:', e.message);
       if (attempt < 1) await new Promise(function(r){ setTimeout(r, 1000); });
     }
   }
 
-  /* Apply data OUTSIDE the fetch try-catch so render errors don't look like fetch failures */
   if (fetchedData) {
     applyData_(fetchedData);
   } else {
-    /* Fall back to stale cache rather than showing empty */
-    try {
-      var stale = JSON.parse(localStorage.getItem(_LS_KEY) || 'null');
-      if (stale && stale.ok) {
-        applyData_(stale);
-        toast('⚠️ បង្ហាញទិន្នន័យចាស់ — Server មិនដំណើរការ', true);
-        if (_refreshBtn) _refreshBtn.classList.remove('spinning');
-        return;
-      }
-    } catch(e) {}
     _allLoans = [];
-    console.error('[HELEN LOAN] loadData failed');
     toast('❌ មិនអាចភ្ជាប់ Server — សូម Refresh ម្ដងទៀត', true);
     populateFilters(); applyFilter(); renderCharts();
   }
@@ -1310,6 +1257,8 @@ function renderCharts() {
 }
 
 function renderMonthlyTrend() {
+  var container = document.getElementById('lrMonthList');
+  if (!container) return;
   var now = new Date();
   var curYear = now.getFullYear();
   var curMonth = now.getMonth();
@@ -1342,7 +1291,7 @@ function renderMonthlyTrend() {
         + '</div>';
     }).join('')
     + '</div>';
-  document.getElementById('lrMonthList').innerHTML = html;
+  container.innerHTML = html;
 }
 
 function renderKPIs() {
@@ -1973,26 +1922,39 @@ async function confirmDelete() {
   btn.disabled = true;
   btn.textContent = 'កំពុងលុប...';
 
-  /* Optimistic update first — instant UI on all protocols */
   var delKey = _deleteLoan.DateTime;
   closeConfirm();
   invalidateLocalCache_();
   _allLoans = _allLoans.filter(function(l){ return l.DateTime !== delKey; });
   _allLoans.forEach(function(l,i){ l._idx = i+1; });
   populateFilters(); applyFilter(); renderCharts();
-  toast('🗑️ លុបបានជោគជ័យ — ផ្ញើទៅ Trash');
 
-  /* Background: sync with server — soft warning only on failure */
   try {
     var res = await CamboAPI.post({ action: 'helen_loan_delete', key: delKey });
-    if (res && !res.ok) {
-      toast('⚠️ ' + (res.message || 'Server sync failed — Refresh to verify'), true);
+    if (res && res.ok) {
+      showDeleteSuccess_();
+    } else {
+      toast('⚠️ ' + (res && res.message ? res.message : 'Server sync failed — Refresh to verify'), true);
     }
   } catch(e) {
-    if (location.protocol !== 'file:') {
-      toast('⚠️ Connection issue — Refresh to verify delete', true);
-    }
+    toast('⚠️ Connection issue — Refresh to verify delete', true);
   }
+}
+
+function showDeleteSuccess_() {
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease';
+  overlay.innerHTML =
+    '<div style="background:var(--card);border-radius:20px;padding:36px 40px;text-align:center;min-width:260px;box-shadow:0 20px 60px rgba(0,0,0,.3)">' +
+      '<div style="width:56px;height:56px;border-radius:50%;background:#22c55e22;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">' +
+        '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+      '</div>' +
+      '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">Successful!</div>' +
+      '<div style="font-size:13px;color:var(--muted)">ទិន្នន័យត្រូវបានលុបជោគជ័យ</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(){ overlay.remove(); });
+  setTimeout(function(){ if (overlay.parentNode) overlay.remove(); }, 2000);
 }
 
 /* ── Edit Modal ── */

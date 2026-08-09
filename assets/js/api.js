@@ -8,7 +8,7 @@
   'use strict';
 
   const APPS_SCRIPT_URL =
-    'https://script.google.com/macros/s/AKfycbwgDXLmktJo69LXa965FaeYKIR76keDIbFS20buSWU6SJvMAgopc-eqZ-uAmpEEflTQqw/exec';
+    'https://script.google.com/macros/s/AKfycby8q0Yrk6x9vc9jPE0SGlh2q34gCMMH8xnGEJ7DyfdWLXPDVC8dcich1eYKuzZKc-pZuQ/exec';
 
   function getBase() { return APPS_SCRIPT_URL; }
 
@@ -27,21 +27,23 @@
     const url = isFile ? APPS_SCRIPT_URL : '/api/proxy';
 
     if (isFile) {
-      /* file:// → CORS blocks reading any cross-origin response.
-         Awaiting the opaque response only adds latency and causes
-         intermittent failures (redirect quirks, network blips).
-         Strategy: check navigator.onLine, then fire-and-forget.
-         The request reaches Apps Script; we just can't read the reply. */
       if (!navigator.onLine) {
         return { ok: false, message: 'គ្មានការតភ្ជាប់អ៊ីនធឺណិត — សូមពិនិត្យ Wifi/Data' };
       }
-      fetch(url, {
-        method:  'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body:    JSON.stringify(body),
-        mode:    'no-cors',
-      }).catch(function() {}); // best-effort — silence any transient errors
-      return { ok: true };
+      /* Simple key-based actions: pass as named GET params so Apps Script
+         can handle them in doGet without needing a body parser. */
+      const _simpleActions = ['helen_loan_delete','helen_loan_recover','helen_loan_perm_delete','helen_infor_delete'];
+      if (_simpleActions.indexOf(body.action) !== -1) {
+        const qs = new URLSearchParams({ action: body.action, key: body.key || '', type: body.type || '', value: body.value || '', _: Date.now() }).toString();
+        const gr = await fetch(APPS_SCRIPT_URL + '?' + qs, { redirect: 'follow' });
+        const gt = await gr.text();
+        try { return JSON.parse(gt); } catch (ex) { return { ok: false, message: 'Parse error' }; }
+      }
+      /* Complex actions (add/update/infor_add): pass full body as GET param */
+      const qs   = 'body=' + encodeURIComponent(JSON.stringify(body)) + '&_=' + Date.now();
+      const gres = await fetch(APPS_SCRIPT_URL + '?' + qs, { redirect: 'follow' });
+      const gtxt = await gres.text();
+      try { return JSON.parse(gtxt); } catch (ex) { return { ok: false, message: 'Parse error' }; }
     }
 
     const res  = await fetch(url, {
