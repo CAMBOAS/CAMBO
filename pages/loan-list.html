@@ -2,7 +2,7 @@
 <html lang="km">
 <head>
   <script>(function(){document.documentElement.style.visibility='';})();</script>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
   <title>Loan List - HELEN LOAN</title>
   <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
@@ -38,7 +38,7 @@
     .lr-tbl-wrap { flex:1; min-height:0; max-height:none !important; overflow-y:auto }
     .lr-tbl-footer { flex-shrink:0; border-top:1px solid rgba(148,163,200,.08); margin-top:0 }
     @media (max-width:768px) {
-      .lr-wrap { overflow:visible; flex:unset; padding-bottom:80px }
+      .lr-wrap { overflow:visible; flex:unset; padding-bottom:calc(80px + env(safe-area-inset-bottom,0px)) }
       .lr-table-card { flex:unset !important; overflow:visible }
       .lr-tbl-wrap { flex:unset; max-height:none !important; overflow-x:hidden; overflow-y:visible }
     }
@@ -388,7 +388,7 @@
     .lr-fab { display:none }
     @media (max-width:768px) {
       .lr-fab {
-        display:flex; position:fixed; bottom:24px; right:20px; z-index:500;
+        display:flex; position:fixed; bottom:calc(24px + env(safe-area-inset-bottom,0px)); right:20px; z-index:500;
         width:54px; height:54px; border-radius:50%;
         background:linear-gradient(135deg,#22c55e,#16a34a);
         color:#fff; font-size:28px; font-weight:900; line-height:1;
@@ -579,7 +579,7 @@
       .lr-table-toolbar { padding:10px 12px 0 !important }
       .lr-tbl-footer { padding:8px 12px 14px !important; margin:0 !important }
 
-      .lr-wrap { padding-bottom:80px }
+      .lr-wrap { padding-bottom:calc(80px + env(safe-area-inset-bottom,0px)) }
     }
 
     /* ── Actions Dropdown ── */
