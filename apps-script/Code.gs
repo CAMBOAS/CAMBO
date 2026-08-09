@@ -16,7 +16,7 @@
 
 const TZ             = 'Asia/Phnom_Penh';
 const LOAN_SHEET     = 'HelenLoan';
-const LOAN_HEADER    = ['DateTime','FullName','NationalID','DOB','Gender','Phone','Groups','Status','Money','Note','FBName','URL','FacebookCom','ID','FBID'];
+const LOAN_HEADER    = ['DateTime','FullName','NationalID','DOB','Gender','Phone','Groups','Status','Money','Note','FBName','URL','FacebookCom','ID','FBID','Code'];
 const CACHE_KEY_ALL  = 'helen_all_v1';
 const CACHE_TTL_SEC  = 300; // 5 minutes
 
@@ -236,6 +236,24 @@ function invalidateAllCache_() {
   try { CacheService.getScriptCache().remove(CACHE_KEY_ALL); } catch(e) {}
 }
 
+function nextCode_() {
+  var ss      = SpreadsheetApp.getActiveSpreadsheet();
+  var codeCol = LOAN_HEADER.indexOf('Code') + 1;
+  var max     = 0;
+  [LOAN_SHEET, 'HelenLoanT'].forEach(function(name) {
+    var sh = ss.getSheetByName(name);
+    if (!sh || sh.getLastRow() <= 1) return;
+    var vals = sh.getRange(2, codeCol, sh.getLastRow() - 1, 1).getValues();
+    vals.forEach(function(r) {
+      var n = parseInt(String(r[0] || '').trim(), 10);
+      if (!isNaN(n) && n > max) max = n;
+    });
+  });
+  var next = String(max + 1);
+  while (next.length < 4) next = '0' + next;
+  return next;
+}
+
 function addHelenInfor_(type, value) {
   invalidateAllCache_();
   if (!value || !String(value).trim()) return { ok:false, message:'Value is empty' };
@@ -317,6 +335,7 @@ function updateHelenLoan_(key, loan) {
     String(loan.FacebookCom || '').trim(),
     String(loan.ID          || '').trim(),
     String(loan.FBID        || '').trim(),
+    String(loan.Code        || '').trim(),
   ];
   sheet.getRange(rowNum, 1, 1, row.length).setValues([row]);
   try { sendTelegramNotify_(loan, loan.DateTime || key, 'edit'); } catch(e) {}
@@ -408,10 +427,11 @@ function addHelenLoan_(loan) {
     sheet.getRange(1, 1, 1, LOAN_HEADER.length).setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
-  const now = loan.DateTime
+  const now  = loan.DateTime
     ? String(loan.DateTime).trim()
     : Utilities.formatDate(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ss");
-  const row = [
+  const code = nextCode_();
+  const row  = [
     now,
     String(loan.FullName    || '').trim(),
     String(loan.NationalID  || '').trim(),
@@ -427,6 +447,7 @@ function addHelenLoan_(loan) {
     String(loan.FacebookCom || '').trim(),
     String(loan.ID          || '').trim(),
     String(loan.FBID        || '').trim(),
+    code,
   ];
   if (sheet.getLastRow() > 1) sheet.insertRowBefore(2);
   sheet.getRange(2, 1, 1, row.length).setValues([row]);
