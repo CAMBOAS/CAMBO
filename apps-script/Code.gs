@@ -19,7 +19,7 @@ const LOAN_SHEET     = 'HelenLoan';
 const LOAN_HEADER    = ['DateTime','FullName','NationalID','DOB','Gender','Phone','Groups','Status','Money','Note','FBName','URL','FacebookCom','ID','FBID','Code'];
 const CACHE_KEY_ALL  = 'helen_all_v1';
 const CACHE_TTL_SEC  = 300; // 5 minutes
-const USERS_SHEET    = 'HelenUsers'; // cols: Username | PIN | Status(Active/Inactive) | Role(Admin/Staff) | DisplayName
+const USERS_SHEET    = 'HelenUsers'; // cols: A=Username | B=PIN | C=Status(Active/Inactive) | D=Role(Admin/Staff) | E=DisplayName | F=ExpiryDate(YYYY-MM-DD)
 
 /* ── Telegram Config ── បំពេញ BOT_TOKEN និង CHAT_ID ── */
 const TG_BOT_TOKEN = '8665831170:AAF-affx337A48GnTGHuWRe3wuvPDvtnYdo';
@@ -33,15 +33,30 @@ function validateAuth_(u, p) {
   try {
     var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(USERS_SHEET);
     if (!sh || sh.getLastRow() <= 1) return null;
-    var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 5).getValues();
+    var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 6).getValues(); // 6 cols: A-F
     for (var i = 0; i < rows.length; i++) {
       if (String(rows[i][0]).trim() === u &&
           String(rows[i][1]).trim() === p &&
           String(rows[i][2]).trim().toLowerCase() === 'active') {
+
+        /* Column F — ExpiryDate (YYYY-MM-DD). Empty = no expiry. */
+        var expRaw  = rows[i][5];
+        var expDate = '';
+        if (expRaw) {
+          expDate = expRaw instanceof Date
+            ? Utilities.formatDate(expRaw, TZ, 'yyyy-MM-dd')
+            : String(expRaw).trim();
+        }
+        if (expDate) {
+          var today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+          if (today > expDate) return { expired: true };
+        }
+
         return {
           username: String(rows[i][0]).trim(),
           role:     String(rows[i][3] || 'Staff').trim(),
-          name:     String(rows[i][4] || rows[i][0]).trim()
+          name:     String(rows[i][4] || rows[i][0]).trim(),
+          expDate:  expDate
         };
       }
     }
@@ -65,13 +80,16 @@ function doGet(e) {
     if (action === 'helen_login') {
       var _lr = validateAuth_(String(e.parameter.u||'').trim(), String(e.parameter.p||'').trim());
       if (!_lr) return jsonOutput_({ ok:false, message:'ឈ្មោះ ឬ PIN មិនត្រូវ' });
-      return jsonOutput_({ ok:true, name:_lr.name, role:_lr.role, username:_lr.username });
+      if (_lr.expired) return jsonOutput_({ ok:false, message:'គណនីបានផុតកំណត់ — សូមទំនាក់ទំនង Admin', code:'expired' });
+      try { sendLoginNotify_(_lr); } catch(e) {}
+      return jsonOutput_({ ok:true, name:_lr.name, role:_lr.role, username:_lr.username, expDate:_lr.expDate });
     }
 
     /* ── Auth check for all other GET actions ── */
     var _au = String(e.parameter.u||'').trim();
     var _ap = String(e.parameter.p||'').trim();
-    if (!validateAuth_(_au, _ap)) return jsonOutput_({ ok:false, message:'auth_required', code:401 });
+    var _av = validateAuth_(_au, _ap);
+    if (!_av || _av.expired) return jsonOutput_({ ok:false, message:'auth_required', code:401 });
 
     if (action === 'helen_loan_list') return jsonOutput_({ ok:true, loans: listHelenLoans_() });
     if (action === 'helen_loan_trash')return jsonOutput_({ ok:true, loans: listHelenLoanTrash_() });
@@ -150,13 +168,16 @@ function doPost(e) {
     if (action === 'helen_login') {
       var _lr2 = validateAuth_(String(body.username||'').trim(), String(body.pin||'').trim());
       if (!_lr2) return jsonOutput_({ ok:false, message:'ឈ្មោះ ឬ PIN មិនត្រូវ' });
-      return jsonOutput_({ ok:true, name:_lr2.name, role:_lr2.role, username:_lr2.username });
+      if (_lr2.expired) return jsonOutput_({ ok:false, message:'គណនីបានផុតកំណត់ — សូមទំនាក់ទំនង Admin', code:'expired' });
+      try { sendLoginNotify_(_lr2); } catch(e) {}
+      return jsonOutput_({ ok:true, name:_lr2.name, role:_lr2.role, username:_lr2.username, expDate:_lr2.expDate });
     }
 
     /* ── Auth check for all write actions ── */
     var _bu = String((body.auth&&body.auth.u)||'').trim();
     var _bp = String((body.auth&&body.auth.p)||'').trim();
-    if (!validateAuth_(_bu, _bp)) return jsonOutput_({ ok:false, message:'auth_required', code:401 });
+    var _bv = validateAuth_(_bu, _bp);
+    if (!_bv || _bv.expired) return jsonOutput_({ ok:false, message:'auth_required', code:401 });
 
     if (action === 'helen_loan_add') {
       addHelenLoan_(body.loan || {});
@@ -509,6 +530,38 @@ function addHelenLoan_(loan) {
 /* ════════════════════════════════════════
    TELEGRAM NOTIFICATION
    ════════════════════════════════════════ */
+function sendLoginNotify_(user) {
+  if (!TG_BOT_TOKEN || TG_BOT_TOKEN === 'YOUR_BOT_TOKEN') return;
+  if (!TG_CHAT_ID   || TG_CHAT_ID   === 'YOUR_CHAT_ID')   return;
+  var now     = new Date();
+  var dateStr = Utilities.formatDate(now, TZ, 'dd/MM/yyyy');
+  var timeStr = Utilities.formatDate(now, TZ, 'hh:mm a');
+  var expLine = '';
+  if (user.expDate) {
+    var expMs    = new Date(user.expDate + 'T23:59:59').getTime();
+    var daysLeft = Math.ceil((expMs - now.getTime()) / 86400000);
+    var warn     = daysLeft <= 3 ? ' ⚠️' : '';
+    expLine = '\n⏳ ផុតកំណត់៖ ' + user.expDate + ' (' + daysLeft + ' ថ្ងៃ' + warn + ')';
+  }
+  var msg = '🔐 *ចូលប្រើប្រាស់ — HELEN LOAN*\n'
+    + '━━━━━━━━━━━━━━━━━━\n'
+    + '👤 ឈ្មោះ៖ ' + user.name + '\n'
+    + '🎭 Role៖ '   + user.role + '\n'
+    + '📅 ថ្ងៃ៖ '   + dateStr   + '\n'
+    + '🕐 ម៉ោង៖ '  + timeStr   + expLine;
+  try {
+    UrlFetchApp.fetch(
+      'https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage',
+      {
+        method: 'post',
+        contentType: 'application/json',
+        muteHttpExceptions: true,
+        payload: JSON.stringify({ chat_id: TG_CHAT_ID, text: msg, parse_mode: 'Markdown' })
+      }
+    );
+  } catch(ex) {}
+}
+
 function sendTelegramNotify_(loan, dateTime, action) {
   if (!TG_BOT_TOKEN || TG_BOT_TOKEN === 'YOUR_BOT_TOKEN') return;
   if (!TG_CHAT_ID   || TG_CHAT_ID   === 'YOUR_CHAT_ID')   return;

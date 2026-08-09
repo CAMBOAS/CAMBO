@@ -200,12 +200,22 @@
 
 <script src="../assets/js/api.js?v=8"></script>
 <script>
-  /* Redirect if already logged in */
+  /* Redirect if already logged in (and not expired) */
   (function() {
     try {
       var a = JSON.parse(localStorage.getItem('helenAuth') || 'null');
-      if (a && a.u && a.p) { location.replace('loan-list.html'); }
+      if (a && a.u && a.p && (!a.exp || Date.now() < a.exp)) {
+        location.replace('loan-list.html');
+      } else if (a && a.exp && Date.now() > a.exp) {
+        localStorage.removeItem('helenAuth');
+      }
     } catch(e) {}
+    /* Show expired notice if redirected here after expiry */
+    if (location.search.indexOf('expired=1') !== -1) {
+      var el = document.getElementById('loginErr');
+      el.textContent = 'វគ្គប្រើប្រាស់បានផុតកំណត់ — សូម Login ម្ដងទៀត';
+      el.style.display = 'block';
+    }
   })();
 
   function togglePin(btn) {
@@ -234,7 +244,10 @@
     try {
       var res = await CamboAPI.post({ action: 'helen_login', username: u, pin: p });
       if (res && res.ok) {
-        localStorage.setItem('helenAuth', JSON.stringify({ u: u, p: p, name: res.name, role: res.role }));
+        var _exp = res.expDate
+          ? new Date(res.expDate + 'T23:59:59').getTime()
+          : Date.now() + 7 * 24 * 60 * 60 * 1000;
+        localStorage.setItem('helenAuth', JSON.stringify({ u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || '' }));
         var next = new URLSearchParams(location.search).get('next') || 'loan-list.html';
         location.replace(next);
       } else {

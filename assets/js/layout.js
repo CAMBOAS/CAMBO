@@ -93,18 +93,32 @@
             <span class="sb-ctrl-label" id="sbLangLabel">${getLang().toUpperCase()}</span>
           </button>
         </div>
-        <div class="sb-user-card" id="sbUserRow">
-          <div class="sb-user-avatar sb-user-avatar-img" id="sbUserAvatar">
-            <img src="${base}images/logo/Helen-Loan.png" alt="Helen Loan" onerror="this.style.display='none';this.parentNode.textContent='HL'">
-          </div>
-          <div class="sb-user-info">
-            <div class="sb-user-name" id="sbUserName">HELEN LOAN</div>
-            <div class="sb-user-role" id="sbUserRole">
-              <span class="sb-online-dot"></span>
-              Administrator
-            </div>
-          </div>
-        </div>
+        ${(function(){
+          var _a = null;
+          try { _a = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(e){}
+          var _name = _a ? (_a.name || _a.u || 'HELEN LOAN') : 'HELEN LOAN';
+          var _role = _a ? (_a.role || 'User') : 'Administrator';
+          var _exp = '';
+          var _expMs = _a && _a.expDate
+            ? new Date(_a.expDate+'T23:59:59').getTime()
+            : (_a && _a.exp ? _a.exp : 0);
+          if (_a && _expMs) {
+            var _d = Math.ceil((_expMs - Date.now()) / 86400000);
+            if (_d <= 0)     _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(239,68,68,.18);color:#ef4444;margin-left:4px">ផុតកំណត់</span>';
+            else if (_d <= 3)_exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(245,158,11,.18);color:#f59e0b;margin-left:4px">'+_d+' ថ្ងៃ</span>';
+            else             _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(16,185,129,.13);color:#10b981;margin-left:4px">'+_d+' ថ្ងៃ</span>';
+          }
+          var _onclick = _a ? ' style="cursor:pointer" onclick="window._hlShowLogoutModal&&window._hlShowLogoutModal()" title="ចាកចេញ"' : '';
+          return '<div class="sb-user-card" id="sbUserRow"'+_onclick+'>'
+            +'<div class="sb-user-avatar sb-user-avatar-img" id="sbUserAvatar">'
+            +'<img src="'+base+'images/logo/Helen-Loan.png" alt="Helen Loan" onerror="this.style.display=\'none\';this.parentNode.textContent=\'HL\'">'
+            +'</div>'
+            +'<div class="sb-user-info">'
+            +'<div class="sb-user-name" id="sbUserName">'+_name+'</div>'
+            +'<div class="sb-user-role" id="sbUserRole"><span class="sb-online-dot"></span>'+_role+_exp+'</div>'
+            +'</div>'
+            +'</div>';
+        })()}
       </div>`;
   }
 
@@ -136,6 +150,41 @@
     location.href = getBase() + 'login.html';
   }
   window.handleLogout = handleLogout;
+
+  function showLogoutModal() {
+    var existing = document.getElementById('hlLogoutModal');
+    if (existing) existing.remove();
+    var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    var cardBg  = isDark ? 'rgba(15,23,42,.97)' : 'rgba(255,255,255,.98)';
+    var textPri = isDark ? '#f1f5f9' : '#0f172a';
+    var textSec = isDark ? '#94a3b8' : '#64748b';
+    var btnBdr  = isDark ? 'rgba(148,163,184,.18)' : 'rgba(148,163,184,.35)';
+    var btnClr  = isDark ? '#94a3b8' : '#64748b';
+    var m = document.createElement('div');
+    m.id = 'hlLogoutModal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:hlFadeIn .15s ease';
+    m.innerHTML = '<style>@keyframes hlFadeIn{from{opacity:0}to{opacity:1}}@keyframes hlSlideUp{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}</style>'
+      + '<div style="background:'+cardBg+';border:1px solid rgba(124,92,255,.2);border-radius:22px;padding:30px 28px 24px;min-width:270px;max-width:320px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.45);animation:hlSlideUp .18s ease">'
+      + '<div style="width:48px;height:48px;background:rgba(239,68,68,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">'
+      + '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+      + '</div>'
+      + '<div style="font-size:16px;font-weight:800;color:'+textPri+';margin-bottom:6px;font-family:inherit">ចាកចេញ?</div>'
+      + '<div style="font-size:12.5px;color:'+textSec+';margin-bottom:22px;line-height:1.6">អ្នកពិតជាចង់ចាកចេញ<br>ពីប្រព័ន្ធ HELEN LOAN?</div>'
+      + '<div style="display:flex;gap:10px">'
+      + '<button id="hlLogoutCancel" style="flex:1;padding:11px;border-radius:11px;border:1.5px solid '+btnBdr+';background:transparent;color:'+btnClr+';font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s">បោះបង់</button>'
+      + '<button id="hlLogoutOk" style="flex:1;padding:11px;border-radius:11px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(239,68,68,.35)">ចាកចេញ</button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(m);
+    document.getElementById('hlLogoutCancel').onclick = function() { m.remove(); };
+    m.addEventListener('click', function(e) { if (e.target === m) m.remove(); });
+    document.getElementById('hlLogoutOk').onclick = function() {
+      m.remove();
+      if (window.HelenAuth) window.HelenAuth.logout();
+      else location.href = getBase() + 'pages/login.html';
+    };
+  }
+  window._hlShowLogoutModal = showLogoutModal;
 
   function initSidebarToggle(sidebar) {
     var btn = document.getElementById('sbToggleBtn');
@@ -234,8 +283,124 @@
     logo.style.animation = anims[Math.floor(Math.random() * anims.length)];
   }
 
+  function applyUserCardAnimation() {
+    var el = document.getElementById('sbUserName');
+    if (!el) return;
+    var _a = null;
+    try { _a = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(e){}
+    if (!_a || !_a.u) return;
+
+    var texts  = [_a.name || _a.u, 'HELEN LOAN'];
+    var colors = ['#a78bfa', '#06b6d4']; /* purple for user, cyan for brand */
+    var idx    = 0;
+    var style  = Math.floor(Math.random() * 9); /* pick ONE style for the whole session */
+
+    if (!document.getElementById('hlUCAnim')) {
+      var s = document.createElement('style');
+      s.id = 'hlUCAnim';
+      s.textContent =
+        '@keyframes hlFdO{from{opacity:1}to{opacity:0}}' +
+        '@keyframes hlFdI{from{opacity:0}to{opacity:1}}' +
+        '@keyframes hlSuO{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-10px)}}' +
+        '@keyframes hlSuI{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}' +
+        '@keyframes hlSdO{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(10px)}}' +
+        '@keyframes hlSdI{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}' +
+        '@keyframes hlSlO{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-12px)}}' +
+        '@keyframes hlSlI{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}' +
+        '@keyframes hlZmO{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.6)}}' +
+        '@keyframes hlZmI{from{opacity:0;transform:scale(1.35)}to{opacity:1;transform:scale(1)}}' +
+        '@keyframes hlBlO{from{filter:blur(0);opacity:1}to{filter:blur(7px);opacity:0}}' +
+        '@keyframes hlBlI{from{filter:blur(7px);opacity:0}to{filter:blur(0);opacity:1}}' +
+        '@keyframes hlFlO{from{opacity:1;transform:rotateX(0) scaleY(1)}to{opacity:0;transform:rotateX(75deg) scaleY(.4)}}' +
+        '@keyframes hlFlI{from{opacity:0;transform:rotateX(-75deg) scaleY(.4)}to{opacity:1;transform:rotateX(0) scaleY(1)}}' +
+        '@keyframes hlGlt{0%,100%{clip-path:none;transform:none}10%{clip-path:polygon(0 20%,100% 20%,100% 21%,0 21%);transform:translate(-3px,0)}30%{clip-path:polygon(0 60%,100% 60%,100% 62%,0 62%);transform:translate(3px,0)}50%{clip-path:none;transform:translate(-2px,1px)}70%{clip-path:polygon(0 80%,100% 80%,100% 81%,0 81%);transform:translate(2px,-1px)}90%{clip-path:none;transform:none}}';
+      document.head.appendChild(s);
+    }
+
+    /* CSS-based transition pairs [exitAnim, enterAnim] */
+    var pairs = [
+      ['hlFdO .28s ease forwards', 'hlFdI .35s ease forwards'],  /* 0 Fade        */
+      ['hlSuO .28s ease forwards', 'hlSuI .35s ease forwards'],  /* 1 Slide Up    */
+      ['hlSdO .28s ease forwards', 'hlSdI .35s ease forwards'],  /* 2 Slide Down  */
+      ['hlSlO .28s ease forwards', 'hlSlI .35s ease forwards'],  /* 3 Slide Left  */
+      ['hlZmO .28s ease forwards', 'hlZmI .35s ease forwards'],  /* 4 Zoom        */
+      ['hlBlO .28s ease forwards', 'hlBlI .35s ease forwards'],  /* 5 Blur Fade   */
+      ['hlFlO .28s ease forwards', 'hlFlI .35s ease forwards'],  /* 6 Flip 3D     */
+      null, /* 7 Typewriter — handled separately */
+      null, /* 8 Glitch     — handled separately */
+    ];
+
+    function resetEl(e) {
+      e.style.cssText = 'display:inline-block';
+    }
+
+    function applyColor(e, i) {
+      e.style.color = colors[i];
+    }
+
+    function tick() {
+      idx = 1 - idx;
+      var newText  = texts[idx];
+      var newColor = colors[idx];
+
+      if (style === 7) {
+        /* Typewriter: erase → retype */
+        var cur = el.textContent;
+        var er  = setInterval(function() {
+          if (cur.length > 0) { cur = cur.slice(0,-1); el.textContent = cur; }
+          else {
+            clearInterval(er);
+            el.style.borderRight = '2px solid ' + newColor;
+            el.style.color = newColor;
+            var i = 0, ty = setInterval(function() {
+              if (i < newText.length) { el.textContent += newText[i++]; }
+              else { clearInterval(ty); el.style.borderRight = ''; setTimeout(tick, 2800); }
+            }, 80);
+          }
+        }, 55);
+        return;
+      }
+
+      if (style === 8) {
+        /* Glitch flash */
+        el.style.animation = 'hlGlt .25s steps(1) forwards';
+        el.style.color = '#ef4444';
+        setTimeout(function() {
+          resetEl(el);
+          el.textContent = newText;
+          el.style.color = '#64748b';
+          el.style.animation = 'hlGlt .2s steps(1) forwards';
+          setTimeout(function() {
+            resetEl(el);
+            el.style.color = newColor;
+            el.style.animation = 'hlFdI .3s ease forwards';
+            setTimeout(function() { el.style.animation = ''; setTimeout(tick, 2800); }, 300);
+          }, 200);
+        }, 250);
+        return;
+      }
+
+      /* CSS animation transition */
+      el.style.animation = pairs[style][0];
+      setTimeout(function() {
+        resetEl(el);
+        el.textContent = newText;
+        el.style.color  = newColor;
+        el.style.animation = pairs[style][1];
+        setTimeout(function() { el.style.animation = ''; setTimeout(tick, 2800); }, 350);
+      }, 280);
+    }
+
+    /* Initial display */
+    el.style.display = 'inline-block';
+    el.textContent   = texts[0];
+    el.style.color   = colors[0];
+    setTimeout(tick, 2800);
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     renderLayout();
     applyLogoAnimation();
+    applyUserCardAnimation();
   });
 })();

@@ -1,6 +1,7 @@
 (function () {
   'use strict';
-  var KEY = 'helenAuth';
+  var KEY        = 'helenAuth';
+  var EXPIRY_MS  = 7 * 24 * 60 * 60 * 1000; /* 7 days */
 
   function get() {
     try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e) { return null; }
@@ -14,11 +15,16 @@
     localStorage.removeItem(KEY);
   }
 
-  /* Call at top of every protected page — redirects to login if not authenticated */
+  /* Call at top of every protected page — redirects to login if not authenticated or expired */
   function check() {
     var auth = get();
     if (!auth || !auth.u || !auth.p) {
       location.replace('login.html');
+      return false;
+    }
+    if (auth.exp && Date.now() > auth.exp) {
+      clear();
+      location.replace('login.html?expired=1');
       return false;
     }
     return true;
