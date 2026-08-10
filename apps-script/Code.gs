@@ -635,17 +635,11 @@ function sendTelegramNotify_(loan, dateTime, action, actorName, oldLoan) {
       + (fbid ? '🔗 FBID: '   + fbid        + '\n' : '');
   }
 
-  var header = action === 'delete' ? '🗑 *ទិន្នន័យត្រូវបានលុប*\n━━━━━━━━━━━━━━━\n'
-             : action === 'edit'   ? '✏️ *ទិន្នន័យត្រូវបានកែសម្រួល*\n━━━━━━━━━━━━━━━\n'
-             :                       '';
-
-  var actorLabel = action === 'delete' ? 'ទិន្នន័យត្រូវបានលុបដោយ'
-                 : action === 'edit'   ? 'ទិន្នន័យត្រូវបានកែសម្រួលដោយ'
-                 :                       'បញ្ចូលទិន្នន័យដោយ';
-  var actorLine = actorName ? '─────────────────\n' + actorLabel + ': ' + actorName : '';
+  var header = action === 'edit' ? '✏️ *ទិន្នន័យត្រូវបានកែសម្រួល*\n━━━━━━━━━━━━━━━\n' : '';
 
   var msg;
   if (action === 'edit' && oldLoan) {
+    var actorLine = actorName ? '─────────────────\n' + 'ទិន្នន័យត្រូវបានកែសម្រួលដោយ: ' + actorName : '';
     msg = header
       + '*Before*\n'
       + loanBlock(oldLoan, oldLoan.DateTime || dateTime)
@@ -653,10 +647,12 @@ function sendTelegramNotify_(loan, dateTime, action, actorName, oldLoan) {
       + '*After*\n'
       + loanBlock(loan, dateTime)
       + actorLine;
+  } else if (action === 'delete') {
+    var actorLine = actorName ? '━━━━━━━━━━━━━━━\n🗑 ទិន្នន័យត្រូវបានលុបដោយ៖ ' + actorName : '';
+    msg = loanBlock(loan, dateTime) + actorLine;
   } else {
-    msg = header
-      + loanBlock(loan, dateTime)
-      + actorLine;
+    var actorLine = actorName ? '─────────────────\n' + 'បញ្ចូលទិន្នន័យដោយ: ' + actorName : '';
+    msg = loanBlock(loan, dateTime) + actorLine;
   }
 
   UrlFetchApp.fetch(
