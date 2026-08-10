@@ -534,8 +534,12 @@
 
   var _busy = false;
   var _failCount = 0;
+  var _lastAlertTime = 0;
 
   function sendLoginFailAlert(reason, username, attempt) {
+    var now = Date.now();
+    if (now - _lastAlertTime < 5 * 60 * 1000) return; // max 1 alert per 5 min
+    _lastAlertTime = now;
     try {
       CamboAPI.post({ action: 'helen_login_alert', username: username, reason: reason, attempt: attempt });
     } catch(e) {}
