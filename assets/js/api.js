@@ -8,7 +8,7 @@
   'use strict';
 
   const APPS_SCRIPT_URL =
-    'https://script.google.com/macros/s/AKfycby6s5cYPrOydw585PVaeqqqDV3YIenYpyRaP9do30HMYCjyKPd8m65CNAPctKSVkStgOw/exec';
+    'https://script.google.com/macros/s/AKfycbz4-YEVfnYd-5cYi5_uRNlcpgDfMMK3l1G7OXzu2owKmJ_yB68HXqhxU-kY9yZO4vrZ-Q/exec';
 
   function getBase() { return APPS_SCRIPT_URL; }
 
