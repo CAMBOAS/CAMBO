@@ -189,15 +189,15 @@ function doPost(e) {
     if (!_bv || _bv.expired) return jsonOutput_({ ok:false, message:'auth_required', code:401 });
 
     if (action === 'helen_loan_add') {
-      addHelenLoan_(body.loan || {});
+      addHelenLoan_(body.loan || {}, _bv.name);
       return jsonOutput_({ ok:true });
     }
     if (action === 'helen_loan_update') {
-      const updated = updateHelenLoan_(body.key, body.loan || {});
+      const updated = updateHelenLoan_(body.key, body.loan || {}, _bv.name);
       return jsonOutput_({ ok:updated, message: updated ? 'Updated' : 'Row not found' });
     }
     if (action === 'helen_loan_delete') {
-      const deleted = deleteHelenLoan_(body.key);
+      const deleted = deleteHelenLoan_(body.key, _bv.name);
       return jsonOutput_({ ok:deleted, message: deleted ? 'Deleted' : 'Row not found' });
     }
     if (action === 'helen_loan_perm_delete') {
@@ -392,7 +392,7 @@ function findHelenLoanRow_(key, sheet) {
   return -1;
 }
 
-function updateHelenLoan_(key, loan) {
+function updateHelenLoan_(key, loan, actorName) {
   invalidateAllCache_();
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(LOAN_SHEET);
@@ -418,11 +418,11 @@ function updateHelenLoan_(key, loan) {
     String(loan.Code        || '').trim(),
   ];
   sheet.getRange(rowNum, 1, 1, row.length).setValues([row]);
-  try { sendTelegramNotify_(loan, loan.DateTime || key, 'edit'); } catch(e) {}
+  try { sendTelegramNotify_(loan, loan.DateTime || key, 'edit', actorName); } catch(e) {}
   return true;
 }
 
-function deleteHelenLoan_(key) {
+function deleteHelenLoan_(key, actorName) {
   invalidateAllCache_();
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(LOAN_SHEET);
@@ -445,7 +445,7 @@ function deleteHelenLoan_(key) {
   try {
     var loanObj = {};
     LOAN_HEADER.forEach(function(col, i) { loanObj[col] = rowData[i]; });
-    sendTelegramNotify_(loanObj, loanObj.DateTime || key, 'delete');
+    sendTelegramNotify_(loanObj, loanObj.DateTime || key, 'delete', actorName);
   } catch(e) {}
   return true;
 }
@@ -497,7 +497,7 @@ function recoverHelenLoan_(key) {
   return true;
 }
 
-function addHelenLoan_(loan) {
+function addHelenLoan_(loan, actorName) {
   invalidateAllCache_();
   const ss  = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(LOAN_SHEET);
@@ -533,7 +533,7 @@ function addHelenLoan_(loan) {
   sheet.getRange(2, 1, 1, row.length).setValues([row]);
 
   /* ── ផ្ញើ Telegram notification ── */
-  try { sendTelegramNotify_(loan, now); } catch(e) {}
+  try { sendTelegramNotify_(loan, now, 'add', actorName); } catch(e) {}
 }
 
 /* ════════════════════════════════════════
@@ -599,7 +599,7 @@ function sendLoginNotify_(user) {
   } catch(ex) {}
 }
 
-function sendTelegramNotify_(loan, dateTime, action) {
+function sendTelegramNotify_(loan, dateTime, action, actorName) {
   if (!TG_BOT_TOKEN || TG_BOT_TOKEN === 'YOUR_BOT_TOKEN') return;
   if (!TG_CHAT_ID   || TG_CHAT_ID   === 'YOUR_CHAT_ID')   return;
   action = action || 'add';
@@ -624,6 +624,11 @@ function sendTelegramNotify_(loan, dateTime, action) {
              : action === 'edit'   ? '✏️ *ទិន្នន័យត្រូវបានកែសម្រួល*\n━━━━━━━━━━━━━━━\n'
              :                       '';
 
+  var actorLabel = action === 'delete' ? 'ទិន្នន័យត្រូវបានលុបដោយ'
+                 : action === 'edit'   ? 'ទិន្នន័យត្រូវបានកែសម្រួលដោយ'
+                 :                       'បញ្ចូលទិន្នន័យដោយ';
+  var actorLine = actorName ? '─────────────────\n' + actorLabel + ': ' + actorName : '';
+
   var msg = header
     + '👤 ឈ្មោះ: ' + name   + '\n'
     + '🪪 NID: '   + nid    + '\n'
@@ -633,7 +638,8 @@ function sendTelegramNotify_(loan, dateTime, action) {
     + '💵 ចំនួនប្រាក់: ' + money  + '\n'
     + '📊 ស្ថានភាព: '    + status + '\n'
     + '📅 កាលបរិច្ឆេទ: ' + dtStr  + '\n'
-    + (fbid ? '🔗 FBID: ' + fbid + '\n' : '');
+    + (fbid ? '🔗 FBID: ' + fbid + '\n' : '')
+    + actorLine;
 
   UrlFetchApp.fetch(
     'https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage',

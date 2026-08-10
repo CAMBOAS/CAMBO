@@ -4,7 +4,7 @@
  */
 
 const APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbyP5YcycibYXl1KUxEfGMWHOpqMtWmo-WbgSkX3Z4nuZjGa1Xf-KULDiWFw4AUG3BQDQA/exec';
+  'https://script.google.com/macros/s/AKfycbyYJSj9PlDVTBeIJoQcRwKyenHH3RFJYPx_q_WPqaUjxyuwHvKxqH9d6AzWVqZw6ezbFg/exec';
 
 export const config = { api: { bodyParser: false } };
 
