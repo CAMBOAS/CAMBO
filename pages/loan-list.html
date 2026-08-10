@@ -1542,6 +1542,7 @@ function closeActionsPanel() { /* no-op — kept for callers */ }
 
 /* ── Export Modal ── */
 var LREX_COLS = [
+  { key:'_rowNum',    label:'#',           on:true  },
   { key:'FullName',   label:'Full Name',   on:true  },
   { key:'NationalID', label:'National ID', on:true  },
   { key:'DOB',        label:'DOB',         on:true  },
@@ -1596,17 +1597,17 @@ function lrexToggleTotal() {
 function renderExportInfoChips() {
   var el = document.getElementById('lrExInfoChips');
   if (!el) return;
-  var data = lrexGetData();
   var chips = [];
-  var grp    = document.getElementById('lrFGroup')  ? document.getElementById('lrFGroup').value  : '';
-  var status = document.getElementById('lrFStatus') ? document.getElementById('lrFStatus').value : '';
-  var gender = document.getElementById('lrFGender') ? document.getElementById('lrFGender').value : '';
-  if (!grp && !status && !gender) {
+  var grp       = document.getElementById('lrFGroup')  ? document.getElementById('lrFGroup').value  : '';
+  var status    = document.getElementById('lrFStatus') ? document.getElementById('lrFStatus').value : '';
+  var gender    = document.getElementById('lrFGender') ? document.getElementById('lrFGender').value : '';
+  var effStatus = status || _kpiActive; // KPI click may not set dropdown value if option is missing
+  if (!grp && !effStatus && !gender) {
     chips.push('<span class="lrex-info-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> All Borrowers</span>');
   } else {
-    if (grp)    chips.push('<span class="lrex-info-chip">Group: ' + grp + '</span>');
-    if (status) chips.push('<span class="lrex-info-chip">Status: ' + status + '</span>');
-    if (gender) chips.push('<span class="lrex-info-chip">Gender: ' + gender + '</span>');
+    if (grp)       chips.push('<span class="lrex-info-chip">Group: ' + grp + '</span>');
+    if (effStatus) chips.push('<span class="lrex-info-chip">Status: ' + effStatus + '</span>');
+    if (gender)    chips.push('<span class="lrex-info-chip">Gender: ' + gender + '</span>');
   }
   el.innerHTML = chips.join('');
 }
@@ -1622,10 +1623,13 @@ function renderExportPreview() {
   data.forEach(function(l) { totalMoney += parseFloat(l.Money||0) || 0; });
 
   var th = cols.map(function(c) { return '<th>' + c.label + '</th>'; }).join('');
-  var rows = data.map(function(loan) {
+  var rows = data.map(function(loan, rowIdx) {
     return '<tr>' + cols.map(function(col) {
-      var v = col.key === 'DateTime' ? fmtDate(loan.DateTime) : String(loan[col.key]||'');
-      var style = col.key === 'Money' ? ' style="color:#22c55e;font-weight:700"' : '';
+      var v = col.key === '_rowNum'  ? String(rowIdx + 1) :
+              col.key === 'DateTime' ? fmtDate(loan.DateTime) :
+              String(loan[col.key]||'');
+      var style = col.key === 'Money'   ? ' style="color:#22c55e;font-weight:700"' :
+                  col.key === '_rowNum' ? ' style="color:var(--muted);font-size:11px;text-align:center"' : '';
       return '<td' + style + '>' + v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</td>';
     }).join('') + '</tr>';
   }).join('');
@@ -1668,8 +1672,11 @@ function lrexBuildTableHTML(data, cols) {
   data.forEach(function(loan, idx) {
     h += '<tr style="background:'+(idx%2===0?bg:altBg)+'">';
     cols.forEach(function(col) {
-      var v = col.key === 'DateTime' ? fmtDate(loan.DateTime) : String(loan[col.key]||'');
-      h += '<td style="padding:7px 12px;border-bottom:1px solid '+border+';white-space:nowrap">'+v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</td>';
+      var v = col.key === '_rowNum'  ? String(idx + 1) :
+              col.key === 'DateTime' ? fmtDate(loan.DateTime) :
+              String(loan[col.key]||'');
+      var extra = col.key === '_rowNum' ? 'text-align:center;color:'+MUTED+';' : '';
+      h += '<td style="padding:7px 12px;border-bottom:1px solid '+border+';white-space:nowrap;'+extra+'">'+v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</td>';
     });
     h += '</tr>';
   });
@@ -1694,11 +1701,14 @@ function lrexRenderToCanvas(data, cols) {
     tmp.font = 'bold '+HFS+'px system-ui,sans-serif';
     var w = tmp.measureText(col.label).width + PH*2;
     tmp.font = FS+'px system-ui,sans-serif';
-    data.forEach(function(loan) {
-      var v = col.key==='DateTime' ? fmtDate(loan.DateTime) : String(loan[col.key]||'');
+    data.forEach(function(loan, ri) {
+      var v = col.key==='_rowNum'  ? String(ri + 1) :
+              col.key==='DateTime' ? fmtDate(loan.DateTime) :
+              String(loan[col.key]||'');
       w = Math.max(w, tmp.measureText(v).width + PH*2);
     });
-    if (col.key==='Note') w = Math.min(w, 200);
+    if (col.key==='Note')    w = Math.min(w, 200);
+    if (col.key==='_rowNum') w = Math.min(w, 42);
     return Math.ceil(w) + 4;
   });
 
@@ -1747,11 +1757,12 @@ function lrexRenderToCanvas(data, cols) {
     ctx.font=FS+'px system-ui,sans-serif';
     var rx=OUTER;
     cols.forEach(function(col,i) {
-      var v=col.key==='DateTime'?fmtDate(loan.DateTime):String(loan[col.key]||'');
+      var v = col.key==='_rowNum'  ? String(ri + 1) :
+              col.key==='DateTime' ? fmtDate(loan.DateTime) :
+              String(loan[col.key]||'');
       var maxW=colW[i]-PH*2;
-      /* truncate long text */
       while(v.length>1 && ctx.measureText(v).width>maxW) v=v.slice(0,-1);
-      ctx.fillStyle=col.key==='Money'?'#22c55e':TEXT;
+      ctx.fillStyle=col.key==='Money'?'#22c55e':col.key==='_rowNum'?MUTED:TEXT;
       ctx.fillText(v,rx+PH,y+PV+FS); rx+=colW[i];
     });
     totalMoney+=parseFloat(loan.Money||0)||0;
@@ -1781,8 +1792,9 @@ function doExportCsvModal() {
   var cols = lrexActiveCols();
   if (!cols.length) { toast('Select at least one column', true); return; }
   var headers = cols.map(function(c) { return c.label; });
-  var rows = data.map(function(loan) {
+  var rows = data.map(function(loan, rowIdx) {
     return cols.map(function(col) {
+      if (col.key === '_rowNum')  return String(rowIdx + 1);
       if (col.key === 'DateTime') return fmtDate(loan.DateTime);
       if (col.key === 'Phone')    return '\t'+(loan.Phone||'');
       return String(loan[col.key]||'');
