@@ -542,6 +542,14 @@
   }
 
   var _busy = false;
+  var _failCount = 0;
+
+  function sendLoginFailAlert(reason, username, attempt) {
+    try {
+      CamboAPI.post({ action: 'helen_login_alert', username: username, reason: reason, attempt: attempt });
+    } catch(e) {}
+  }
+
   async function doLogin() {
     if (_busy) return;
     var u = document.getElementById('loginUser').value.trim();
@@ -563,8 +571,11 @@
           ? new Date(res.expDate + 'T23:59:59').getTime()
           : Date.now() + 7 * 24 * 60 * 60 * 1000;
         if (res.expDate && Date.now() > _exp) {
+          _failCount++;
           showErr('Your account has expired — please contact Admin to renew access.', true);
+          if (_failCount >= 2) sendLoginFailAlert('expired', u, _failCount);
         } else {
+          _failCount = 0;
           localStorage.setItem('helenAuth', JSON.stringify({
             u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || ''
           }));
@@ -572,7 +583,9 @@
           location.replace(next);
         }
       } else {
+        _failCount++;
         showErr('Incorrect username or PIN', true);
+        if (_failCount >= 2) sendLoginFailAlert('wrong', u, _failCount);
       }
     } catch(err) {
       showErr('Unable to connect to server — please check your internet', false);

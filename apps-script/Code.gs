@@ -173,6 +173,15 @@ function doPost(e) {
       return jsonOutput_({ ok:true, name:_lr2.name, role:_lr2.role, username:_lr2.username, expDate:_lr2.expDate });
     }
 
+    /* ── Public: login fail alert ── */
+    if (action === 'helen_login_alert') {
+      var alertUser    = String(body.username || '').trim();
+      var alertReason  = String(body.reason   || 'wrong').trim();
+      var alertAttempt = parseInt(body.attempt, 10) || 2;
+      try { sendLoginFailAlert_(alertUser, alertReason, alertAttempt); } catch(ex) {}
+      return jsonOutput_({ ok: true });
+    }
+
     /* ── Auth check for all write actions ── */
     var _bu = String((body.auth&&body.auth.u)||'').trim();
     var _bp = String((body.auth&&body.auth.p)||'').trim();
@@ -530,6 +539,34 @@ function addHelenLoan_(loan) {
 /* ════════════════════════════════════════
    TELEGRAM NOTIFICATION
    ════════════════════════════════════════ */
+function sendLoginFailAlert_(username, reason, attempt) {
+  if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
+  var now     = new Date();
+  var dateStr = Utilities.formatDate(now, TZ, 'dd/MM/yyyy');
+  var timeStr = Utilities.formatDate(now, TZ, 'hh:mm a');
+  var label   = reason === 'expired'
+    ? '⏰ Account Expired'
+    : '🔐 Incorrect Username or PIN';
+  var msg = '🚨 *Login Alert — HELEN LOAN*\n'
+    + '━━━━━━━━━━━━━━━━━━\n'
+    + '👤 Username: '  + (username || '—') + '\n'
+    + '❌ Reason: '    + label             + '\n'
+    + '🔁 Attempt: #'  + attempt           + '\n'
+    + '📅 Date: '      + dateStr           + '\n'
+    + '🕐 Time: '      + timeStr;
+  try {
+    UrlFetchApp.fetch(
+      'https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage',
+      {
+        method: 'post',
+        contentType: 'application/json',
+        muteHttpExceptions: true,
+        payload: JSON.stringify({ chat_id: TG_CHAT_ID, text: msg, parse_mode: 'Markdown' })
+      }
+    );
+  } catch(ex) {}
+}
+
 function sendLoginNotify_(user) {
   if (!TG_BOT_TOKEN || TG_BOT_TOKEN === 'YOUR_BOT_TOKEN') return;
   if (!TG_CHAT_ID   || TG_CHAT_ID   === 'YOUR_CHAT_ID')   return;
