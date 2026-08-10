@@ -399,6 +399,10 @@ function updateHelenLoan_(key, loan, actorName) {
   if (!sheet) return false;
   const rowNum = findHelenLoanRow_(key, sheet);
   if (rowNum < 0) return false;
+  /* Snapshot old data before overwrite — used for Before/After Telegram */
+  const oldRowData = sheet.getRange(rowNum, 1, 1, LOAN_HEADER.length).getValues()[0];
+  var oldLoan = {};
+  LOAN_HEADER.forEach(function(col, i) { oldLoan[col] = oldRowData[i]; });
   const row = [
     String(loan.DateTime   || key).trim(),
     String(loan.FullName   || '').trim(),
@@ -418,7 +422,7 @@ function updateHelenLoan_(key, loan, actorName) {
     String(loan.Code        || '').trim(),
   ];
   sheet.getRange(rowNum, 1, 1, row.length).setValues([row]);
-  try { sendTelegramNotify_(loan, loan.DateTime || key, 'edit', actorName); } catch(e) {}
+  try { sendTelegramNotify_(loan, loan.DateTime || key, 'edit', actorName, oldLoan); } catch(e) {}
   return true;
 }
 
@@ -599,26 +603,37 @@ function sendLoginNotify_(user) {
   } catch(ex) {}
 }
 
-function sendTelegramNotify_(loan, dateTime, action, actorName) {
+function sendTelegramNotify_(loan, dateTime, action, actorName, oldLoan) {
   if (!TG_BOT_TOKEN || TG_BOT_TOKEN === 'YOUR_BOT_TOKEN') return;
   if (!TG_CHAT_ID   || TG_CHAT_ID   === 'YOUR_CHAT_ID')   return;
   action = action || 'add';
 
-  /* Format date DD/MM/YYYY */
-  var dtStr = '';
-  try {
-    var d = new Date(dateTime instanceof Date ? dateTime : String(dateTime));
-    dtStr = Utilities.formatDate(d, TZ, 'dd/MM/yyyy');
-  } catch(e) { dtStr = String(dateTime || '').substring(0, 10); }
+  function fmtDt(dt) {
+    try {
+      var d = new Date(dt instanceof Date ? dt : String(dt));
+      return Utilities.formatDate(d, TZ, 'dd/MM/yyyy');
+    } catch(e) { return String(dt || '').substring(0, 10); }
+  }
 
-  var name   = String(loan.FullName    || '—').trim();
-  var nid    = String(loan.NationalID  || '—').trim();
-  var phone  = String(loan.Phone       || '—').trim();
-  var gender = String(loan.Gender      || '—').trim();
-  var group  = String(loan.Groups      || '—').trim();
-  var money  = loan.Money ? '$' + Number(loan.Money).toFixed(2).replace(/\.00$/, '') : '—';
-  var status = String(loan.Status      || '—').trim();
-  var fbid   = String(loan.FBID        || '').trim();
+  function loanBlock(l, dt) {
+    var name   = String(l.FullName    || '—').trim();
+    var nid    = String(l.NationalID  || '—').trim();
+    var phone  = String(l.Phone       || '—').trim();
+    var gender = String(l.Gender      || '—').trim();
+    var group  = String(l.Groups      || '—').trim();
+    var money  = l.Money ? '$' + Number(l.Money).toFixed(2).replace(/\.00$/, '') : '—';
+    var status = String(l.Status      || '—').trim();
+    var fbid   = String(l.FBID        || '').trim();
+    return '👤 ឈ្មោះ: '      + name        + '\n'
+      + '🪪 NID: '            + nid         + '\n'
+      + '📱 ទូរស័ព្ទ: '       + phone       + '\n'
+      + '⚧ ភេទ: '             + gender      + '\n'
+      + '👥 ក្រុម: '           + group       + '\n'
+      + '💵 ចំនួនប្រាក់: '     + money       + '\n'
+      + '📊 ស្ថានភាព: '        + status      + '\n'
+      + '📅 កាលបរិច្ឆេទ: '    + fmtDt(dt)  + '\n'
+      + (fbid ? '🔗 FBID: '   + fbid        + '\n' : '');
+  }
 
   var header = action === 'delete' ? '🗑 *ទិន្នន័យត្រូវបានលុប*\n━━━━━━━━━━━━━━━\n'
              : action === 'edit'   ? '✏️ *ទិន្នន័យត្រូវបានកែសម្រួល*\n━━━━━━━━━━━━━━━\n'
@@ -629,17 +644,20 @@ function sendTelegramNotify_(loan, dateTime, action, actorName) {
                  :                       'បញ្ចូលទិន្នន័យដោយ';
   var actorLine = actorName ? '─────────────────\n' + actorLabel + ': ' + actorName : '';
 
-  var msg = header
-    + '👤 ឈ្មោះ: ' + name   + '\n'
-    + '🪪 NID: '   + nid    + '\n'
-    + '📱 ទូរស័ព្ទ: ' + phone  + '\n'
-    + '⚧ ភេទ: '    + gender + '\n'
-    + '👥 ក្រុម: '  + group  + '\n'
-    + '💵 ចំនួនប្រាក់: ' + money  + '\n'
-    + '📊 ស្ថានភាព: '    + status + '\n'
-    + '📅 កាលបរិច្ឆេទ: ' + dtStr  + '\n'
-    + (fbid ? '🔗 FBID: ' + fbid + '\n' : '')
-    + actorLine;
+  var msg;
+  if (action === 'edit' && oldLoan) {
+    msg = header
+      + '*Before*\n'
+      + loanBlock(oldLoan, oldLoan.DateTime || dateTime)
+      + '─────────────────\n'
+      + '*After*\n'
+      + loanBlock(loan, dateTime)
+      + actorLine;
+  } else {
+    msg = header
+      + loanBlock(loan, dateTime)
+      + actorLine;
+  }
 
   UrlFetchApp.fetch(
     'https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage',
