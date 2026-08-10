@@ -133,7 +133,9 @@ function doGet(e) {
     /* Simple key-based write actions via GET (file:// CORS workaround) */
     if (action === 'helen_loan_delete') {
       const key = String(e.parameter.key || '').trim();
-      const deleted = deleteHelenLoan_(key);
+      var _bvDel = null;
+      try { _bvDel = validateAuth_(String(e.parameter.u||'').trim(), String(e.parameter.p||'').trim()); } catch(ex_) {}
+      const deleted = deleteHelenLoan_(key, _bvDel && _bvDel.name ? _bvDel.name : '');
       return jsonOutput_({ ok: deleted, message: deleted ? 'Deleted' : 'Row not found' });
     }
     if (action === 'helen_loan_recover') {
