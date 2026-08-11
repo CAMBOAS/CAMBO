@@ -2296,6 +2296,14 @@ function renderInforList() {
       }).join('')
     : '<div style="padding:14px 16px;color:var(--muted);font-size:13px">មិនមានទិន្នន័យ</div>';
 }
+function _refreshOpenFormDropdowns() {
+  var grps = _helenInfor.groups.length ? _helenInfor.groups : [...new Set(_allLoans.map(function(l){ return l.Groups||''; }).filter(Boolean))].sort();
+  var sts  = _helenInfor.statuses.length ? _helenInfor.statuses : ['Good','Normal','BlackListed','High Risk'];
+  var grpHtml = '<option value="">— Select —</option>' + grps.map(function(g){ return '<option value="'+esc(g)+'">'+esc(g)+'</option>'; }).join('');
+  var stHtml  = '<option value="">— Select —</option>' + sts.map(function(s){ return '<option value="'+esc(s)+'">'+esc(s)+'</option>'; }).join('');
+  ['af_Groups','ef_Groups'].forEach(function(id){ var el=document.getElementById(id); if(el){ var v=el.value; el.innerHTML=grpHtml; el.value=v; } });
+  ['af_Status','ef_Status'].forEach(function(id){ var el=document.getElementById(id); if(el){ var v=el.value; el.innerHTML=stHtml; el.value=v; } });
+}
 async function addInforItem() {
   var val = (document.getElementById('lrInforNewVal').value || '').trim();
   if (!val) return toast('⚠️ សូមបញ្ចូលឈ្មោះ!');
@@ -2307,6 +2315,7 @@ async function addInforItem() {
       _helenInfor[_inforTab] = _inforData[_inforTab].slice();
       document.getElementById('lrInforNewVal').value = '';
       renderInforList();
+      _refreshOpenFormDropdowns();
       toast('✅ បន្ថែមបានជោគជ័យ!');
     } else { toast('❌ ' + (res.message || 'Error')); }
   } catch(e) { toast('❌ Server error'); }
@@ -2319,6 +2328,7 @@ async function deleteInforItem(val) {
       _inforData[_inforTab] = _inforData[_inforTab].filter(function(x){ return x !== val; });
       _helenInfor[_inforTab] = _inforData[_inforTab].slice();
       renderInforList();
+      _refreshOpenFormDropdowns();
       toast('🗑️ លុបបានជោគជ័យ!');
     } else { toast('❌ ' + (res.message || 'Error')); }
   } catch(e) { toast('❌ Server error'); }
